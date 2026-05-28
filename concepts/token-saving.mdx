@@ -1,0 +1,69 @@
+---
+title: Token Saving
+description: How read_smart saves 50-99% tokens with AST-aware file diff caching
+icon: bolt
+---
+
+Every token costs money and context window space. `read_smart` is an MCP tool that caches file content and returns **only what changed** — saving 50-99% tokens on re-reads.
+
+## The problem
+
+A typical agent session reads the same files multiple times:
+
+1. Read `src/index.ts` to understand the codebase (900 tokens)
+2. Make changes
+3. Read `src/index.ts` again to verify (900 tokens)
+4. Read it again after another change (900 tokens)
+
+**2,700 tokens** for one file, but the content barely changed between reads.
+
+## The solution
+
+`read_smart` maintains a **per-file snapshot** with content hashes:
+
+| Read | Status | Tokens | Savings |
+|---|---|---|---|
+| 1st | `first_read` — full content | 900 | — |
+| 2nd (no change) | `unchanged` — chunk list only | 50 | **94%** |
+| 3rd (1 function changed) | `modified` — diff only | 200 | **78%** |
+| 4th (no change) | `unchanged` | 50 | **94%** |
+| **Total** | | **1,200** | **vs 3,600 naive** |
+
+## AST-aware chunking
+
+Unlike line-based diffing, `read_smart` splits files into **semantic chunks**:
+
+### TypeScript / JavaScript
+Parsed via `@babel/parser` into top-level declarations:
+```
+chunk: "createPool" (lines 7-25)
+chunk: "getConnection" (lines 27-45)
+chunk: "closePool" (lines 47-55)
+```
+
+If you add a new function at line 7, only that new chunk is "changed" — `getConnection` and `closePool` keep their identity (even though their line numbers shifted).
+
+### Python
+Split by top-level `def` and `class` blocks using indentation analysis.
+
+### Markdown
+Split by `h2` and `h3` headings.
+
+### Other files
+Fixed 100-line windows.
+
+## Token estimation
+
+Token count is estimated at **0.3 tokens per character** — a blended rate that works for both English and Japanese text.
+
+## Cache storage
+
+Snapshots are stored in the `file_snapshots` table in the same SQLite database as memories. No external services required.
+
+| Column | Purpose |
+|---|---|
+| `path` | Absolute file path |
+| `mtime_ms` | Last modification time |
+| `sha256` | Full file hash |
+| `chunks_json` | Array of chunk definitions with individual hashes |
+| `total_tokens` | Estimated token count |

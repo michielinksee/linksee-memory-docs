@@ -1,0 +1,83 @@
+---
+title: 3-Axis Classification
+description: Altitude, Type, and State — queryable dimensions on every memory
+icon: cube
+---
+
+Every memory in Linksee is auto-classified along **3 orthogonal axes** when stored. These are stored as queryable virtual columns, enabling precise filtering in `recall`.
+
+## Axis 1: Altitude (cognitive level)
+
+How high-level is this thought?
+
+| Altitude | Description | Forgetting multiplier |
+|---|---|---|
+| `mission` | Why we exist | **0** (never decays) |
+| `strategy` | Positioning, GTM, roadmap | 0.1 (very slow) |
+| `architecture` | System design, tech choices | 0.3 (slow) |
+| `implementation` | Code, tasks, execution details | 1.0 (normal) |
+
+<Info>
+  Altitude affects forgetting speed. A mission-level memory about why the company exists will never auto-decay, while an implementation detail about a specific API call will fade naturally.
+</Info>
+
+## Axis 2: Type (what kind of thought)
+
+What is this memory, cognitively?
+
+| Type | Description | Example |
+|---|---|---|
+| `question` | An open question | "Should we use REST or GraphQL for the sync layer?" |
+| `comparison` | Evaluating alternatives | "freee vs MoneyForward — freee has better API docs but worse webhooks" |
+| `decision` | A choice that was made | "Going with PostgreSQL over MySQL for the main database" |
+| `work` | Work in progress | "Implementing the token-saving diff cache for read_smart" |
+| `outcome` | Result of completed work | "Deployed v0.5.0 — all tests passing, 3 beta users onboarded" |
+| `learning` | Insight or lesson learned | "FTS5 trigram tokenizer handles Japanese better than unicode61" |
+| `note` | General note | "Team standup moved to Tuesdays" |
+
+## Axis 3: State (lifecycle)
+
+Where is this thought in its lifecycle?
+
+| State | Description |
+|---|---|
+| `open` | Not yet resolved |
+| `decided` | Decision made, not yet implemented |
+| `in_progress` | Currently being worked on |
+| `done` | Completed |
+| `stalled` | In-progress but untouched for 30+ days |
+| `parked` | Deliberately set aside for later |
+| `superseded` | Replaced by a newer decision or approach |
+
+<Note>
+  `consolidate` automatically marks `in_progress` memories untouched for 30+ days as `stalled`.
+</Note>
+
+## Using axes in recall
+
+Filter by any combination of axes:
+
+```json
+{
+  "query": "database",
+  "altitude": "architecture",
+  "mem_type": "decision",
+  "mem_state": "decided"
+}
+```
+
+This returns only architecture-level decisions about databases that have been decided — perfect for understanding why the current tech stack was chosen.
+
+### Practical filter patterns
+
+| I want to find... | Filter |
+|---|---|
+| Open questions | `mem_state: "open", mem_type: "question"` |
+| Architecture decisions | `altitude: "architecture", mem_type: "decision"` |
+| Stalled work | `mem_state: "stalled"` |
+| Strategic insights | `altitude: "strategy", mem_type: "learning"` |
+| Implementation details | `altitude: "implementation", mem_type: "work"` |
+
+## Auto-inference
+
+When you call `remember`, the 3 axes are **automatically inferred** from the content. You don't need to set them manually — but you can override by including structured JSON in the `content` field.

@@ -1,0 +1,43 @@
+---
+title: Resources Overview
+description: MCP resources for browsing memory state without tool calls
+icon: database
+---
+
+Linksee Memory exposes **4 static resources** and **3 resource templates** via the MCP Resources protocol. Resources provide read-only views into the memory store — useful for IDE sidebar panels, dashboards, or quick inspection without making tool calls.
+
+## Static resources
+
+These are always available and return current state:
+
+| URI | Description |
+|---|---|
+| [`memory://stats`](/resources/static#stats) | Summary counts: entities, memories, layer breakdown, heat distribution |
+| [`memory://hot`](/resources/static#hot) | Memories currently in the "hot" heat band |
+| [`memory://recent`](/resources/static#recent) | Memories accessed in the last 7 days |
+| [`memory://caveats`](/resources/static#caveats) | Every caveat-layer memory — the protected "never forget" pile |
+
+## Resource templates
+
+Parameterized resources for drilling into specific data:
+
+| URI Template | Description |
+|---|---|
+| `memory://entity/{name}` | All memories about a specific entity |
+| `memory://layer/{layer}` | All memories in a specific layer |
+| `memory://memory/{id}` | A single memory by its numeric ID |
+
+## How to use
+
+In MCP clients that support resource browsing (e.g. Claude Desktop's resource panel), these appear as browsable data sources. They return `application/json`.
+
+In code, access via the MCP resources protocol:
+
+```json
+{
+  "method": "resources/read",
+  "params": {
+    "uri": "memory://caveats"
+  }
+}
+```

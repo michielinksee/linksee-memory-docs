@@ -1,0 +1,95 @@
+---
+title: recall
+description: Retrieve memories ranked by relevance, heat, and importance
+icon: magnifying-glass
+---
+
+Your persistent memory across all AI tools. When the user says "use linksee" or asks about past decisions, context, or preferences, call this first. Returns memories ranked by a composite score of relevance, heat, momentum, and importance.
+
+## Parameters
+
+<ParamField body="query" type="string" required>
+  What you want to remember. Free-text, entity name, or FTS5 MATCH expression.
+</ParamField>
+
+<ParamField body="entity_name" type="string">
+  Narrow results to a specific entity.
+</ParamField>
+
+<ParamField body="layer" type="string">
+  Filter by memory layer. Accepts aliases (e.g. `warnings` → `caveat`).
+</ParamField>
+
+<ParamField body="altitude" type="string">
+  Filter by cognitive altitude: `mission`, `strategy`, `architecture`, `implementation`.
+</ParamField>
+
+<ParamField body="mem_type" type="string">
+  Filter by memory type: `question`, `comparison`, `decision`, `work`, `outcome`, `learning`, `note`.
+</ParamField>
+
+<ParamField body="mem_state" type="string">
+  Filter by lifecycle state: `open`, `decided`, `in_progress`, `done`, `stalled`, `parked`, `superseded`.
+</ParamField>
+
+<ParamField body="thread_id" type="string">
+  Filter by thread ID — returns all memories in a decision chain or session group.
+</ParamField>
+
+<ParamField body="band" type="string">
+  Filter by heat band: `hot`, `warm`, `cold`, `frozen`.
+</ParamField>
+
+<ParamField body="max_tokens" type="number" default="2000">
+  Approximate token budget. Iteration stops when this budget is consumed or `limit` is reached, whichever comes first.
+</ParamField>
+
+<ParamField body="limit" type="number">
+  Hard cap on number of memories returned.
+</ParamField>
+
+<ParamField body="offset" type="number" default="0">
+  Skip this many top results (pagination). Use `has_more` from prior response to decide next offset.
+</ParamField>
+
+<ParamField body="mark_accessed" type="boolean" default="true">
+  Set `false` for preview / listing queries that should not bump heat scores.
+</ParamField>
+
+## Ranking
+
+Memories are ranked by a composite score:
+
+```
+score = 0.45 * relevance + 0.25 * heat + 0.15 * momentum + 0.15 * importance
+```
+
+| Factor | Weight | Source |
+|---|---|---|
+| Relevance | 45% | FTS5 BM25 score + LIKE match |
+| Heat | 25% | Ebbinghaus decay since last access |
+| Momentum | 15% | Entity activity frequency |
+| Importance | 15% | User-assigned or auto-inferred |
+
+## Response
+
+Each memory in the response includes:
+
+- `match_reasons` — array explaining why this memory ranked (e.g. `content_match_fts`, `entity_name_match`, `heat:hot`, `pinned`, `caveat_protected`)
+- `score_breakdown` — individual scores for transparency
+- `has_more` — boolean indicating if more results exist beyond the current page
+- `stopped_by` — whether iteration stopped at `tokens`, `limit`, or `end`
+
+## Example
+
+```json
+{
+  "query": "Supabase connection pooling",
+  "layer": "caveat",
+  "max_tokens": 3000
+}
+```
+
+<Info>
+  **Dual search**: Recall uses both FTS5 full-text search (BM25-ranked, trigram tokenizer) and LIKE fallback, merging and deduplicating results. This ensures both exact and fuzzy matches are found, including Japanese text.
+</Info>

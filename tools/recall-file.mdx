@@ -1,0 +1,64 @@
+---
+title: recall_file
+description: Get the complete edit history of a file across all sessions
+icon: file-lines
+---
+
+Get the **complete edit history** of a file across all sessions, with per-edit user-intent context. Returns total edit count, daily breakdown, distinct user intents that drove the edits, and linked memories.
+
+Use when you need to understand **WHY** a file was modified historically — far more accurate than `recall` for file-centric questions because it queries `session_file_edits` (every physical edit) instead of summary memories.
+
+## Parameters
+
+<ParamField body="path_substring" type="string" required>
+  Substring to match against file paths. Can be a filename (`search-services.ts`), partial path (`src/db/`), or full absolute path.
+</ParamField>
+
+<ParamField body="max_intents" type="number" default="10">
+  Max distinct user-intent snippets to return.
+</ParamField>
+
+<ParamField body="scope_to_roots" type="boolean" default="false">
+  If `true`, filter results to files inside the client-provided roots (MCP Roots). Skips silently when the client provides no roots.
+</ParamField>
+
+## Response
+
+| Field | Description |
+|---|---|
+| `paths_matched` | List of file paths that matched the substring |
+| `total_edits` | Total number of physical edits recorded |
+| `first_edit` / `last_edit` | Date range of edit history |
+| `sessions_involved` | Number of distinct sessions that edited this file |
+| `daily_breakdown` | Edits per day, grouped by operation type |
+| `user_intents` | Distinct user-intent snippets, ordered by recency |
+| `linked_memories` | Related memories with entity name and preview |
+
+## Example
+
+```json
+{
+  "path_substring": "globals.css",
+  "max_intents": 5
+}
+```
+
+Response:
+```json
+{
+  "paths_matched": ["C:/Users/HP/linksee-site/app/globals.css"],
+  "total_edits": 14,
+  "first_edit": "2026-04-20",
+  "last_edit": "2026-05-28",
+  "sessions_involved": 3,
+  "user_intents": [
+    "Dark theme redesign for LP",
+    "Bump card border contrast for display visibility",
+    "Initial light theme setup"
+  ]
+}
+```
+
+<Info>
+  `recall_file` is the "anti-Mem0 wall" feature — it connects physical file edits to the human intent behind them, something flat memory stores cannot do.
+</Info>

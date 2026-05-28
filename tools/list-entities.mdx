@@ -1,0 +1,57 @@
+---
+title: list_entities
+description: List known entities sorted by recent activity
+icon: list
+---
+
+List the entities currently known to this memory store, sorted by recent activity. Use at the start of a new session ("what do I know about?") before issuing specific `recall` queries.
+
+Cheaper than `recall` for the "give me an overview" question.
+
+## Parameters
+
+<ParamField body="kind" type="string">
+  Filter by entity kind: `person`, `company`, `project`, `concept`, `file`, `other`.
+</ParamField>
+
+<ParamField body="min_memories" type="number" default="1">
+  Only include entities with at least N memories.
+</ParamField>
+
+<ParamField body="limit" type="number" default="30">
+  Max entities to return.
+</ParamField>
+
+<ParamField body="offset" type="number" default="0">
+  Pagination offset.
+</ParamField>
+
+## Response
+
+Each entity includes:
+
+| Field | Description |
+|---|---|
+| `name` | Display name |
+| `kind` | Entity kind |
+| `canonical_key` | Email, domain, file path (if set) |
+| `memory_count` | Total memories |
+| `goal_count` | Memories in goal layer |
+| `caveat_count` | Memories in caveat layer |
+| `learning_count` | Memories in learning layer |
+| `impl_count` | Memories in implementation layer |
+| `pinned_count` | Memories with importance >= 0.9 |
+| `momentum_score` | Activity momentum |
+
+## Example
+
+```json
+{
+  "kind": "project",
+  "min_memories": 3
+}
+```
+
+<Tip>
+  Use `list_entities` first, then `recall` with `entity_name` to drill into a specific project or person.
+</Tip>

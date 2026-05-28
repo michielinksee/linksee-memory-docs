@@ -1,0 +1,52 @@
+---
+title: Static Resources
+description: 4 always-available read-only views into memory state
+icon: chart-bar
+---
+
+## memory://stats
+
+Summary statistics for the entire memory store.
+
+```json
+{
+  "entities": 24,
+  "memories": 186,
+  "layers": {
+    "goal": 12,
+    "context": 34,
+    "emotion": 8,
+    "implementation": 78,
+    "caveat": 22,
+    "learning": 32
+  },
+  "heat_bands": {
+    "hot": 15,
+    "warm": 42,
+    "cold": 89,
+    "frozen": 40
+  },
+  "file_snapshots": 67,
+  "db_size_mb": 4.2
+}
+```
+
+## memory://hot
+
+Memories currently in the **hot** heat band (score 70-100). These are what the agent is actively working with.
+
+Returns an array of memory objects sorted by heat score descending.
+
+## memory://recent
+
+Memories accessed in the **last 7 days**, ordered by most recent access. Useful for understanding what the agent has been working on across recent sessions.
+
+## memory://caveats
+
+Every **caveat-layer** memory — the permanently protected pile of pain lessons. These are the memories that should always be checked before making decisions.
+
+Returns all caveats sorted by importance (highest first), then by recency.
+
+<Tip>
+  Browse `memory://caveats` at the start of any significant work session to refresh your awareness of known pitfalls.
+</Tip>

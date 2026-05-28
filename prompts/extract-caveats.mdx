@@ -1,0 +1,40 @@
+---
+title: extract-caveats
+description: Scan text for pain lessons and propose caveat-layer memories
+icon: triangle-exclamation
+---
+
+Scan a body of text (post-mortem, error log, decision doc) and propose **caveat-layer memories** — concise pain lessons starting with verbs.
+
+## Arguments
+
+<ParamField body="text" type="string" required>
+  Source text. Post-mortem, debug session transcript, retro notes, or any text containing lessons learned.
+</ParamField>
+
+<ParamField body="entity_hint" type="string">
+  Optional canonical entity name for the caveats.
+</ParamField>
+
+## Output format
+
+```json
+[
+  {
+    "content": "Never deploy freee OAuth changes on Friday — sandbox goes down for maintenance every Friday night JST",
+    "importance": 0.9
+  },
+  {
+    "content": "Always check Supabase connection pool limits before adding new services — default is 20 connections",
+    "importance": 0.85
+  }
+]
+```
+
+## Caveat writing rules
+
+Each caveat must:
+- **Start with a verb**: "Never", "Always", "Watch out", "Check", "Verify"
+- **Be one sentence** — concise and actionable
+- **Be concrete** — include specific names, numbers, conditions
+- **Capture something painful** — things the reader does NOT want to relearn

@@ -1,0 +1,39 @@
+---
+title: Resource Templates
+description: Parameterized resources for drilling into specific entities, layers, and memories
+icon: brackets-curly
+---
+
+## memory://entity/{name}
+
+All memories about a specific entity. Replace `{name}` with the entity name.
+
+```
+memory://entity/KanseiLink
+memory://entity/Supabase
+memory://entity/Alice
+```
+
+Returns all memories for that entity, grouped by layer.
+
+## memory://layer/{layer}
+
+All memories in a specific layer across all entities. Replace `{layer}` with one of: `goal`, `context`, `emotion`, `implementation`, `caveat`, `learning`.
+
+```
+memory://layer/caveat
+memory://layer/goal
+```
+
+Returns all memories in that layer, sorted by importance then recency.
+
+## memory://memory/{id}
+
+A single memory by its numeric ID. Replace `{id}` with the `memory_id` from a `recall` response.
+
+```
+memory://memory/42
+memory://memory/186
+```
+
+Returns the full memory object including all metadata, scores, and linked data.

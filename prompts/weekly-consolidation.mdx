@@ -1,0 +1,33 @@
+---
+title: weekly-consolidation
+description: Summarize the past week's memories into a learning-layer entry
+icon: calendar-week
+---
+
+Sleep-mode summary of the past week's memories for an entity. Produces a single **learning-layer entry** that captures the trajectory. Use as input to the `consolidate` tool, or to write a Friday digest.
+
+## Arguments
+
+<ParamField body="entity_name" type="string" required>
+  The entity to consolidate.
+</ParamField>
+
+<ParamField body="week_offset" type="number" default="0">
+  Weeks-ago offset. `0` = this week, `1` = last week.
+</ParamField>
+
+## Workflow
+
+1. Call `recall` for the entity, filtered to the target week
+2. Produce a learning-layer summary covering:
+   - Goal trajectory (progress toward objectives)
+   - What happened (key events, decisions)
+   - Insights gained
+   - Caveats to preserve
+3. Output a JSON memory object: `{entity_name, layer: "learning", content, importance: 0.7}`
+
+## When to use
+
+- **Friday wrap-up**: Run at the end of each week to compress the week's work
+- **Before consolidation**: Generate the summary, then run `consolidate` to clean up cold memories
+- **Monthly reviews**: Run with `week_offset: 1` through `4` to review the past month

@@ -1,0 +1,50 @@
+---
+title: update_memory
+description: Atomically edit an existing memory in-place
+icon: pen-to-square
+---
+
+Atomically edit an existing memory in-place. Preferred over `forget` + `remember` because it preserves `memory_id`, which matters for `session_file_edits` links and referential integrity.
+
+Use to correct facts, update deadlines in goal entries, refine caveats, or re-score importance.
+
+## Parameters
+
+<ParamField body="memory_id" type="number" required>
+  The `memory.id` to update. Get this from a prior `recall` response.
+</ParamField>
+
+<ParamField body="content" type="string">
+  New content (plain text or JSON). If omitted, content is kept as-is.
+</ParamField>
+
+<ParamField body="layer" type="string">
+  Move to a different layer. Aliases accepted. If omitted, layer is kept.
+</ParamField>
+
+<ParamField body="importance" type="number">
+  New importance score `0.0`-`1.0`. Set to 0.9+ to pin.
+</ParamField>
+
+## Example
+
+```json
+{
+  "memory_id": 42,
+  "content": "Never use pgbouncer in session mode with Supabase — causes prepared statement conflicts. Use transaction mode. Verified again 2026-05.",
+  "importance": 0.95
+}
+```
+
+<Warning>
+  **Caveat protection**: Caveat-layer memories can be updated (content/importance), but cannot have their `protected` flag removed or be moved to another layer.
+</Warning>
+
+## When to use update vs. forget + remember
+
+| Use `update_memory` | Use `forget` + `remember` |
+|---|---|
+| Correcting a fact | Completely replacing with unrelated content |
+| Adding detail to existing memory | Splitting one memory into multiple |
+| Changing importance score | Changing entity association |
+| Refining a caveat wording | — |

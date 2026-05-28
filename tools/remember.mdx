@@ -1,0 +1,73 @@
+---
+title: remember
+description: Save important context that persists across sessions and across AI agents
+icon: brain
+---
+
+Save important context that should persist across sessions and across AI tools. When the user says "use linksee", "remember this", "don't forget", or you discover a decision, preference, or lesson worth preserving — store it here.
+
+Memories saved here are accessible from **any** AI agent the user connects to — Claude, GPT, Cursor, Codex, Gemini.
+
+## Parameters
+
+<ParamField body="entity_name" type="string" required>
+  Name of the entity this memory is about (e.g. "MyProject", "Supabase", "Alice").
+</ParamField>
+
+<ParamField body="entity_kind" type="string" required>
+  One of: `person`, `company`, `project`, `concept`, `file`, `other`.
+</ParamField>
+
+<ParamField body="layer" type="string" required>
+  Memory layer. One of: `goal`, `context`, `emotion`, `implementation`, `caveat`, `learning`.
+
+  Common aliases are accepted:
+  | Alias | Resolves to |
+  |---|---|
+  | `why`, `intent`, `targets` | `goal` |
+  | `background`, `reason`, `timing` | `context` |
+  | `tone`, `feelings`, `mood` | `emotion` |
+  | `impl`, `how`, `tried` | `implementation` |
+  | `warning`, `pain`, `pitfall`, `dont` | `caveat` |
+  | `decision`, `insight`, `growth` | `learning` |
+</ParamField>
+
+<ParamField body="content" type="string" required>
+  The memory content. Plain text or JSON.
+</ParamField>
+
+<ParamField body="importance" type="number">
+  `0.0` to `1.0`. Set to **0.9 or higher to pin** a memory — pinned memories are protected from auto-forgetting even outside the caveat layer. Default: auto-assigned based on layer.
+</ParamField>
+
+<ParamField body="thread_id" type="string">
+  Optional thread ID to group related memories (e.g. a session ID or decision chain). Enables decision → implementation → outcome tracing.
+</ParamField>
+
+<ParamField body="force" type="boolean" default="false">
+  Bypass the paste-back quality check. Set `true` only when you are sure the content is original user or agent thought, not pasted CI logs or assistant output.
+</ParamField>
+
+## Example
+
+```json
+{
+  "entity_name": "KanseiLink",
+  "entity_kind": "project",
+  "layer": "caveat",
+  "content": "Never deploy freee OAuth changes on Friday — their sandbox goes down for maintenance every Friday night JST.",
+  "importance": 0.95
+}
+```
+
+## Behavior
+
+1. **Entity resolution**: 3-tier matching — canonical_key exact → normalized_name → case-insensitive name → insert new entity
+2. **Quality check**: Rejects pasted CI logs, assistant output, and other non-original content (bypass with `force: true`)
+3. **Auto-structuring**: Plain text is wrapped into structured JSON with inferred `altitude`, `type`, and `state` classifications
+4. **Pinning**: Memories with `importance >= 0.9` get `protected = 1`, preventing auto-forgetting
+5. **Events**: Records a `memory_stored` event for momentum tracking
+
+<Warning>
+  Caveat-layer memories are **always protected** regardless of importance score. They survive consolidation and auto-forgetting indefinitely.
+</Warning>

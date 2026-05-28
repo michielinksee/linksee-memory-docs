@@ -1,0 +1,76 @@
+---
+title: CLI Commands
+description: Command-line utilities included with linksee-memory
+icon: terminal
+---
+
+The `linksee-memory` npm package includes several CLI utilities beyond the MCP server itself.
+
+## linksee-memory
+
+The main MCP server. Runs in **stdio mode** — typically launched by your MCP client, not directly.
+
+```bash
+linksee-memory
+```
+
+## linksee-memory-setup
+
+Interactive initial setup. Creates the database directory and initializes the schema.
+
+```bash
+linksee-memory-setup
+```
+
+## linksee-memory-install-skill
+
+Install the Linksee Memory skill into Claude Code's MCP configuration.
+
+```bash
+linksee-memory-install-skill
+```
+
+## linksee-memory-stats
+
+Display database statistics: entity count, memory count, layer breakdown, heat distribution, database size.
+
+```bash
+linksee-memory-stats
+```
+
+Example output:
+```
+Linksee Memory Stats
+====================
+Entities:     24
+Memories:     186
+  goal:       12
+  context:    34
+  emotion:    8
+  implementation: 78
+  caveat:     22
+  learning:   32
+Heat bands:
+  hot:        15
+  warm:       42
+  cold:       89
+  frozen:     40
+File snapshots: 67
+DB size:      4.2 MB
+```
+
+## linksee-memory-import
+
+Import session transcripts or external data into the memory store.
+
+```bash
+linksee-memory-import <file>
+```
+
+## linksee-memory-sync
+
+Sync a session's data. Useful for manual synchronization after disconnects.
+
+```bash
+linksee-memory-sync <session-id>
+```

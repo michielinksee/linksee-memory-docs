@@ -1,0 +1,94 @@
+---
+title: read_smart
+description: Read files with diff-only caching — save 50-99% tokens on re-reads
+icon: bolt
+---
+
+Read a file with **diff-only caching**. Use INSTEAD of the standard `Read` tool for files you have read before — saves 50%+ tokens on re-reads.
+
+## How it works
+
+| Read # | File state | Response | Tokens |
+|---|---|---|---|
+| 1st | New file | Full content + chunk metadata | ~900 |
+| 2nd | Unchanged (same mtime) | `"unchanged"` + cached chunk list | **~50** |
+| 2nd | Touched but identical (mtime changed, sha256 same) | `"unchanged_content"` | **~50** |
+| 2nd | Modified | Changed chunks with content + unchanged chunks as metadata-only | **~200** |
+
+## Parameters
+
+<ParamField body="path" type="string" required>
+  Absolute file path.
+</ParamField>
+
+<ParamField body="force" type="boolean" default="false">
+  If `true`, return full content regardless of cache state.
+</ParamField>
+
+## Response statuses
+
+### `first_read`
+Full file content with chunk metadata. Each chunk includes:
+- `name` — function name, heading text, or line range
+- `hash` — sha256 of chunk content
+- `lines` — line range in the file
+
+### `unchanged`
+File mtime matches cache. Returns chunk list (names + hashes) without content. **Maximum token savings.**
+
+### `unchanged_content`
+File mtime changed but sha256 matches — the file was touched (e.g. `git checkout`) but content is identical.
+
+### `modified`
+File actually changed. Returns:
+- **Changed chunks**: full content included
+- **Unchanged chunks**: metadata only (name + hash)
+
+## Chunking strategies
+
+| File type | Strategy | Chunk identity |
+|---|---|---|
+| TS / JS / JSX / TSX | AST via @babel/parser | Top-level declarations (function name, class name, export) |
+| Python | Indent-based | Top-level `def` / `class` blocks |
+| Markdown | Heading-based | h2 / h3 sections |
+| Everything else | Fixed windows | 100-line blocks |
+
+<Info>
+  AST-aware chunking means that if you add a function at the top of a file, only the new function shows as "changed" — existing functions keep their identity and hash, so they're returned as metadata-only.
+</Info>
+
+## Example
+
+```json
+{
+  "path": "/home/user/project/src/db/connection.ts"
+}
+```
+
+First read:
+```json
+{
+  "status": "first_read",
+  "chunks": [
+    { "name": "import_block", "lines": "1-5", "hash": "abc123", "content": "import { Pool }..." },
+    { "name": "createPool", "lines": "7-25", "hash": "def456", "content": "export function createPool()..." },
+    { "name": "getConnection", "lines": "27-45", "hash": "ghi789", "content": "export async function..." }
+  ],
+  "total_tokens": 890
+}
+```
+
+Second read (unchanged):
+```json
+{
+  "status": "unchanged",
+  "chunks": [
+    { "name": "import_block", "lines": "1-5", "hash": "abc123" },
+    { "name": "createPool", "lines": "7-25", "hash": "def456" },
+    { "name": "getConnection", "lines": "27-45", "hash": "ghi789" }
+  ],
+  "total_tokens": 48
+}
+```
+
+**94.6% token savings.**

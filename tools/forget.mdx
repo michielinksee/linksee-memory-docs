@@ -1,0 +1,71 @@
+---
+title: forget
+description: Delete a memory by ID or run auto-forgetting sweep
+icon: eraser
+---
+
+Explicitly delete a memory by ID, or run auto-forgetting across all memories based on the Ebbinghaus forgetting curve.
+
+**Caveat-layer**, **goal-layer**, and **pinned** (importance >= 0.9) memories are always preserved.
+
+<Warning>
+  `forget` is destructive. Prefer `update_memory` for corrections.
+</Warning>
+
+## Parameters
+
+<ParamField body="memory_id" type="number">
+  Specific memory to delete. If omitted, runs an auto-sweep.
+</ParamField>
+
+<ParamField body="dry_run" type="boolean" default="false">
+  Report what would be deleted without actually deleting.
+</ParamField>
+
+<ParamField body="interactive" type="boolean" default="false">
+  If `true`, ask the user to confirm via MCP Elicitation before deleting. Only applies when `memory_id` is set.
+</ParamField>
+
+## Auto-forgetting
+
+When called without `memory_id`, runs an automatic sweep using the **forgetting risk** formula:
+
+```
+risk = (1 - heat/100) * (1 - importance) * daysSinceAccess * (1 + daysSinceAccess/30) * altitudeMultiplier
+```
+
+### Altitude multipliers
+
+| Altitude | Multiplier | Effect |
+|---|---|---|
+| `mission` | 0 | Never forgotten |
+| `strategy` | 0.1 | Very slow decay |
+| `architecture` | 0.3 | Slow decay |
+| `implementation` | 1.0 | Normal decay |
+
+### Thresholds
+
+| Risk score | Action |
+|---|---|
+| < 50 | Keep |
+| 50 - 200 | Compress (merge into learning) |
+| > 200 | Drop |
+
+## Always preserved
+
+These memories are **never** auto-forgotten:
+
+- All `caveat` layer memories
+- All `goal` layer memories
+- All memories with `importance >= 0.9` (pinned)
+- All memories with `protected = true`
+
+## Example: Dry run
+
+```json
+{
+  "dry_run": true
+}
+```
+
+Returns a list of memories that would be deleted or compressed, without modifying anything.

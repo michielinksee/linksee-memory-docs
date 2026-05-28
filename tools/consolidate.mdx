@@ -1,0 +1,74 @@
+---
+title: consolidate
+description: Sleep-mode compression — cluster cold memories into learning summaries
+icon: compress
+---
+
+Sleep-mode compression. Clusters cold, low-importance memories by (entity, layer), summarizes each cluster into a single **protected learning-layer entry**, deletes originals, and runs a forget-sweep.
+
+Run at session end or on demand. Set `dry_run: true` to preview without writing.
+
+## Parameters
+
+<ParamField body="scope" type="string" default="session">
+  `all` — consolidate across all entities. `session` — only the current session's entities.
+</ParamField>
+
+<ParamField body="min_age_days" type="number" default="7">
+  Minimum age for memories to be eligible for clustering. Set to `0` to consolidate immediately (useful after bulk import).
+</ParamField>
+
+<ParamField body="dry_run" type="boolean" default="false">
+  Preview what would be compressed without modifying the database.
+</ParamField>
+
+<ParamField body="use_llm" type="boolean" default="false">
+  If `true`, uses MCP Sampling to request the client LLM to write better consolidated summaries. Falls back to heuristic if the client refuses.
+</ParamField>
+
+## What gets consolidated
+
+| Layer | Eligible? | Notes |
+|---|---|---|
+| `context` | Yes | Situational context fades over time |
+| `emotion` | Yes | Emotional state is session-specific |
+| `implementation` | Yes | How-details get compressed to learnings |
+| `goal` | No | Goals are never consolidated |
+| `caveat` | No | Caveats are permanently protected |
+| `learning` | No | Already the target layer |
+
+### Eligibility criteria
+
+- Heat score < 30 (cold)
+- At least 2 memories in the cluster
+- Age >= `min_age_days`
+
+## Output
+
+Each consolidated cluster produces a learning-layer memory containing:
+
+- Exemplar fragments from the original memories
+- Time period covered
+- Count of originals replaced
+- `replaced_ids` for audit trail
+
+## Post-consolidation
+
+After clustering, `consolidate` also:
+
+1. **Forget-sweep**: Runs auto-forgetting on remaining unprotected memories
+2. **Stalled detection**: Marks `in_progress` memories untouched for 30+ days as `stalled`
+
+## Example
+
+```json
+{
+  "scope": "all",
+  "min_age_days": 14,
+  "dry_run": true
+}
+```
+
+<Tip>
+  Run `consolidate` weekly or use the `weekly-consolidation` prompt for a guided workflow.
+</Tip>

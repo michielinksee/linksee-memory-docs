@@ -1,0 +1,35 @@
+---
+title: recall-and-write
+description: Anti-pattern guard — recall before acting, cite memory IDs in output
+icon: magnifying-glass
+---
+
+Anti-pattern guard. Before writing code, drafting a doc, or making a decision: **recall relevant memories first**, then produce the answer with explicit citations to recalled memory IDs.
+
+Forces "memory before action" discipline.
+
+## Arguments
+
+<ParamField body="task" type="string" required>
+  What you are about to do. One sentence describing the code task, decision, or document draft.
+</ParamField>
+
+<ParamField body="entity_hint" type="string">
+  Optional entity to focus recall on.
+</ParamField>
+
+## Workflow
+
+1. Call `recall` with the task description
+2. Skim returned memories and identify applicable caveats
+3. Produce output with inline citations: `[memory:1234]`
+4. If no relevant memories found, state explicitly: "No prior context found"
+
+## Why this matters
+
+Without this prompt, agents tend to act first and recall later (or not at all). This creates:
+- Repeated mistakes that caveats could have prevented
+- Inconsistent decisions across sessions
+- Wasted tokens re-discovering known constraints
+
+The recall-and-write pattern ensures every significant action is informed by prior context.

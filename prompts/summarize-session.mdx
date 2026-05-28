@@ -1,0 +1,50 @@
+---
+title: summarize-session
+description: Extract structured memories from a session transcript
+icon: clipboard
+---
+
+Turn a chat session transcript into structured memories. Produces up to **6 memories** (one per layer) capturing goal / context / emotion / implementation / caveat / learning.
+
+Use at session end to preserve the most valuable parts of the conversation.
+
+## Arguments
+
+<ParamField body="transcript" type="string" required>
+  The session transcript text. Free-form — paste the conversation or a summary.
+</ParamField>
+
+<ParamField body="entity_hint" type="string">
+  Optional canonical entity name to attach the memories to (e.g. "MyProject"). If omitted, the prompt infers entities from the transcript.
+</ParamField>
+
+## What it produces
+
+A JSON array of memory objects ready for `remember`:
+
+```json
+[
+  {
+    "entity_name": "KanseiLink",
+    "entity_kind": "project",
+    "layer": "goal",
+    "content": "Ship AEO report generation by end of May",
+    "importance": 0.8
+  },
+  {
+    "entity_name": "KanseiLink",
+    "entity_kind": "project",
+    "layer": "caveat",
+    "content": "Never cache freee OAuth tokens longer than 1 hour — they silently expire",
+    "importance": 0.95
+  }
+]
+```
+
+## Rules
+
+- Maximum 6 entries (one per layer)
+- Importance scored 0.0 to 1.0
+- Caveats must be 1 sentence starting with a verb
+- No verbatim quotes from the transcript
+- Focus on decisions, pain, and insights — skip routine actions

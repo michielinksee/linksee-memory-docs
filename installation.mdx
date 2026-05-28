@@ -1,0 +1,142 @@
+---
+title: Installation
+description: Install Linksee Memory and connect it to your MCP client
+---
+
+## Install the package
+
+```bash
+npm install -g linksee-memory
+```
+
+<Info>
+  Requires **Node.js 20+**. Check your version with `node --version`.
+</Info>
+
+## Configure your MCP client
+
+Add Linksee Memory to your client's MCP server configuration.
+
+<Tabs>
+  <Tab title="Claude Code">
+    Run the built-in installer:
+
+    ```bash
+    linksee-memory-install-skill
+    ```
+
+    Or add manually to your Claude Code MCP settings:
+
+    ```json
+    {
+      "mcpServers": {
+        "linksee-memory": {
+          "command": "linksee-memory"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Claude Desktop">
+    Edit `claude_desktop_config.json`:
+
+    <CodeGroup>
+    ```json macOS
+    // ~/Library/Application Support/Claude/claude_desktop_config.json
+    {
+      "mcpServers": {
+        "linksee-memory": {
+          "command": "linksee-memory"
+        }
+      }
+    }
+    ```
+
+    ```json Windows
+    // %APPDATA%\Claude\claude_desktop_config.json
+    {
+      "mcpServers": {
+        "linksee-memory": {
+          "command": "linksee-memory"
+        }
+      }
+    }
+    ```
+    </CodeGroup>
+  </Tab>
+  <Tab title="Cursor / Windsurf">
+    Add to your MCP configuration file (usually `.cursor/mcp.json` or equivalent):
+
+    ```json
+    {
+      "mcpServers": {
+        "linksee-memory": {
+          "command": "linksee-memory"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Other MCP Clients">
+    Linksee Memory uses **stdio transport**. Any MCP client that supports stdio can connect:
+
+    ```json
+    {
+      "command": "linksee-memory",
+      "transport": "stdio"
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Verify the installation
+
+After restarting your agent, try:
+
+> "Use linksee to remember that I prefer TypeScript over JavaScript"
+
+The agent should call the `remember` tool and confirm the memory was stored.
+
+Then in a **new session**:
+
+> "What do I prefer, TypeScript or JavaScript? Check linksee."
+
+The agent should call `recall` and find your preference.
+
+## Database location
+
+By default, the SQLite database is stored at:
+
+| OS | Path |
+|---|---|
+| macOS / Linux | `~/.linksee-memory/memory.db` |
+| Windows | `%USERPROFILE%\.linksee-memory\memory.db` |
+
+Override with the `LINKSEE_MEMORY_DIR` environment variable:
+
+```bash
+LINKSEE_MEMORY_DIR=/path/to/custom/dir linksee-memory
+```
+
+Or in your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "linksee-memory": {
+      "command": "linksee-memory",
+      "env": {
+        "LINKSEE_MEMORY_DIR": "/path/to/custom/dir"
+      }
+    }
+  }
+}
+```
+
+## Uninstall
+
+```bash
+npm uninstall -g linksee-memory
+```
+
+Your memory database at `~/.linksee-memory/memory.db` is preserved. Delete it manually if you want a clean slate.

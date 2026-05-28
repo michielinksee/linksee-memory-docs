@@ -1,0 +1,120 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Linksee Memory",
+  "logo": {
+    "dark": "/images/logo-dark.svg",
+    "light": "/images/logo-light.svg"
+  },
+  "favicon": "/images/favicon.svg",
+  "colors": {
+    "primary": "#10B981",
+    "light": "#34D399",
+    "dark": "#059669",
+    "anchors": {
+      "from": "#10B981",
+      "to": "#6366F1"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/michielinksee/linksee-memory"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Install",
+    "url": "/installation"
+  },
+  "tabs": [
+    {
+      "name": "Tools",
+      "url": "tools"
+    },
+    {
+      "name": "API Reference",
+      "url": "resources"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "npm",
+      "icon": "npm",
+      "url": "https://www.npmjs.com/package/linksee-memory"
+    },
+    {
+      "name": "Community",
+      "icon": "x-twitter",
+      "url": "https://x.com/SynapseArrowsSG"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "installation",
+        "quickstart"
+      ]
+    },
+    {
+      "group": "Concepts",
+      "pages": [
+        "concepts/memory-layers",
+        "concepts/three-axis",
+        "concepts/token-saving",
+        "concepts/forgetting-curve",
+        "concepts/cross-agent"
+      ]
+    },
+    {
+      "group": "Tools",
+      "pages": [
+        "tools/remember",
+        "tools/recall",
+        "tools/update-memory",
+        "tools/list-entities",
+        "tools/forget",
+        "tools/consolidate",
+        "tools/recall-file",
+        "tools/read-smart"
+      ]
+    },
+    {
+      "group": "Resources & Prompts",
+      "pages": [
+        "resources/overview",
+        "resources/static",
+        "resources/templates",
+        "prompts/overview",
+        "prompts/summarize-session",
+        "prompts/extract-caveats",
+        "prompts/recall-and-write",
+        "prompts/entity-handoff",
+        "prompts/weekly-consolidation"
+      ]
+    },
+    {
+      "group": "Reference",
+      "pages": [
+        "reference/architecture",
+        "reference/configuration",
+        "reference/cli",
+        "reference/changelog"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "x": "https://x.com/SynapseArrowsSG",
+    "github": "https://github.com/michielinksee/linksee-memory"
+  },
+  "modeToggle": {
+    "default": "dark"
+  },
+  "backgroundImage": "/images/background.png",
+  "feedback": {
+    "thumbsRating": true
+  },
+  "search": {
+    "prompt": "Search docs..."
+  }
+}

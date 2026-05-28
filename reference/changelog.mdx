@@ -1,0 +1,56 @@
+---
+title: Changelog
+description: Version history and release notes
+icon: clock-rotate-left
+---
+
+## v0.6.0
+
+**3-Axis Memory** — 2026-05
+
+- **3-axis classification**: Every memory auto-classified by altitude (mission/strategy/architecture/implementation), type (question/decision/work/outcome/...), and state (open/decided/in_progress/done/stalled/...)
+- **Virtual generated columns**: `altitude`, `mem_type`, `mem_state` are SQL-queryable without JSON parsing
+- **Recall filters**: Filter by `altitude`, `mem_type`, `mem_state`, `thread_id`, and `band` in recall queries
+- **Stalled detection**: `consolidate` auto-marks `in_progress` memories untouched for 30+ days as `stalled`
+- **Thread support**: Group related memories via `thread_id` for decision chain tracing
+- **Quality check**: `remember` rejects pasted CI logs and assistant output (bypass with `force: true`)
+- **LLM-assisted consolidation**: `consolidate` with `use_llm: true` uses MCP Sampling for better summaries
+- **Interactive forget**: `forget` with `interactive: true` uses MCP Elicitation for user confirmation
+- **Roots-scoped recall_file**: `scope_to_roots: true` filters to the client's working directories
+
+## v0.5.0
+
+**Token-Saving Engine** — 2026-04
+
+- **read_smart**: AST-aware file diff caching with 4 response statuses
+- **AST chunking**: TS/JS/Python files split by function/class, Markdown by headings
+- **Chunk identity**: Stable across reads — adding a function doesn't invalidate other chunks
+- **file_facts**: Extracted facts per file chunk
+
+## v0.4.2
+
+**Precision Memory** — 2026-04
+
+- **Ebbinghaus forgetting curve**: Heat-based memory decay with altitude multipliers
+- **Momentum scoring**: Entity activity frequency drives ranking
+- **Consolidation**: Sleep-mode compression of cold memories into learning summaries
+- **recall_file**: File edit history with user-intent context
+- **session_file_edits**: Every physical edit linked to conversation context
+
+## v0.3.0
+
+**Cross-Agent Foundation** — 2026-03
+
+- **6-layer memory structure**: goal / context / emotion / implementation / caveat / learning
+- **FTS5 trigram search**: Full-text search supporting English and Japanese
+- **Entity dedup**: 3-tier matching (canonical_key / normalized_name / case-insensitive)
+- **Caveat protection**: Caveat-layer memories permanently preserved
+- **Pinning**: importance >= 0.9 protects from auto-forgetting
+
+## v0.2.0
+
+**Initial Release** — 2026-02
+
+- Basic remember/recall with SQLite storage
+- Entity-based memory organization
+- MCP stdio transport

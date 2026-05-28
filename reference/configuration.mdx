@@ -1,0 +1,87 @@
+---
+title: Configuration
+description: Environment variables and runtime options
+icon: gear
+---
+
+## Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `LINKSEE_MEMORY_DIR` | `~/.linksee-memory` | Directory for the SQLite database file |
+
+The database file is always named `memory.db` inside the configured directory.
+
+## MCP client configuration
+
+### Basic setup
+
+```json
+{
+  "mcpServers": {
+    "linksee-memory": {
+      "command": "linksee-memory"
+    }
+  }
+}
+```
+
+### Custom database location
+
+```json
+{
+  "mcpServers": {
+    "linksee-memory": {
+      "command": "linksee-memory",
+      "env": {
+        "LINKSEE_MEMORY_DIR": "/path/to/custom/dir"
+      }
+    }
+  }
+}
+```
+
+### Multiple instances
+
+You can run separate memory stores for different contexts:
+
+```json
+{
+  "mcpServers": {
+    "linksee-work": {
+      "command": "linksee-memory",
+      "env": {
+        "LINKSEE_MEMORY_DIR": "~/.linksee-memory/work"
+      }
+    },
+    "linksee-personal": {
+      "command": "linksee-memory",
+      "env": {
+        "LINKSEE_MEMORY_DIR": "~/.linksee-memory/personal"
+      }
+    }
+  }
+}
+```
+
+## MCP capabilities
+
+### Server declares
+
+```json
+{
+  "tools": {},
+  "resources": { "subscribe": false, "listChanged": false },
+  "prompts": { "listChanged": false }
+}
+```
+
+### Client capabilities used (optional)
+
+| Capability | Used by | Fallback |
+|---|---|---|
+| `sampling/createMessage` | `consolidate` with `use_llm: true` | Heuristic summarization |
+| `roots/list` | `recall_file` with `scope_to_roots: true` | No filtering |
+| `elicitation/create` | `forget` with `interactive: true` | Skips confirmation |
+
+All three degrade gracefully when the client does not support them.

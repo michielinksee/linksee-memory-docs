@@ -1,0 +1,36 @@
+---
+title: entity-handoff
+description: Produce a handoff document for transferring context to a new session or agent
+icon: arrow-right-arrow-left
+---
+
+Produce a **handoff document** for an entity: name, kind, key memories per layer, current open questions, and next steps. Use when transferring context to a new session, a new agent, or a new collaborator.
+
+## Arguments
+
+<ParamField body="entity_name" type="string" required>
+  The entity to hand off.
+</ParamField>
+
+<ParamField body="audience" type="string" default="new claude session">
+  Who receives the handoff. Examples: "new claude session", "human teammate", "cursor agent".
+</ParamField>
+
+## Output format
+
+Markdown document with sections:
+
+1. **Identity** — entity name, kind, canonical key
+2. **Goal** — current objectives
+3. **State** — where things stand
+4. **Caveats** — with `memory_id` citations
+5. **Open questions** — unresolved items
+6. **Suggested next steps** — actionable recommendations
+
+Kept under 1 page for readability.
+
+## Workflow
+
+1. Call `recall` with `max_tokens: 6000` for the entity
+2. Group returned memories by layer
+3. Synthesize into the handoff document format

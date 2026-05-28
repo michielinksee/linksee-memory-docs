@@ -1,0 +1,35 @@
+---
+title: Prompts Overview
+description: 5 built-in MCP prompts for common memory workflows
+icon: message
+---
+
+Linksee Memory includes **5 MCP prompts** — reusable workflow templates that guide the agent through structured memory operations.
+
+## Available prompts
+
+<CardGroup cols={2}>
+  <Card title="summarize-session" icon="clipboard" href="/prompts/summarize-session">
+    Extract structured memories from a session transcript. Up to 6 memories (one per layer).
+  </Card>
+  <Card title="extract-caveats" icon="triangle-exclamation" href="/prompts/extract-caveats">
+    Scan text for pain lessons and propose caveat-layer memories.
+  </Card>
+  <Card title="recall-and-write" icon="magnifying-glass" href="/prompts/recall-and-write">
+    Anti-pattern guard: recall before acting, cite memory IDs in output.
+  </Card>
+  <Card title="entity-handoff" icon="arrow-right-arrow-left" href="/prompts/entity-handoff">
+    Produce a handoff document for transferring context to a new session or agent.
+  </Card>
+  <Card title="weekly-consolidation" icon="calendar-week" href="/prompts/weekly-consolidation">
+    Summarize a week's memories into a single learning-layer entry.
+  </Card>
+</CardGroup>
+
+## How prompts work
+
+MCP prompts are templates that the agent expands with arguments. In Claude Code, invoke them via the prompts list or by asking the agent to use them:
+
+> "Use the summarize-session prompt to capture what we did today"
+
+The agent fills in the template arguments and executes the workflow.

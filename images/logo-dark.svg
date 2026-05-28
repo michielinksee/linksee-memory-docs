@@ -1,0 +1,6 @@
+<svg width="130" height="28" viewBox="0 0 130 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="3" width="16" height="16" rx="3" stroke="#a78bfa" stroke-width="2"/>
+  <rect x="0" y="0" width="16" height="16" rx="3" stroke="#6366f1" stroke-width="2"/>
+  <text x="26" y="17" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#f1f5f9">Linksee</text>
+  <text x="86" y="17" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#34d399">Memory</text>
+</svg>
