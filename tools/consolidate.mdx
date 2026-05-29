@@ -1,8 +1,12 @@
 ---
-title: consolidate
+title: consolidate (deprecated)
 description: Sleep-mode compression — cluster cold memories into learning summaries
 icon: compress
 ---
+
+<Warning>
+  **Deprecated in v0.7.0.** Consolidation now runs automatically on server startup (7-day threshold, non-blocking). No manual calls needed.
+</Warning>
 
 Sleep-mode compression. Clusters cold, low-importance memories by (entity, layer), summarizes each cluster into a single **protected learning-layer entry**, deletes originals, and runs a forget-sweep.
 

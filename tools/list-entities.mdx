@@ -1,8 +1,12 @@
 ---
-title: list_entities
+title: list_entities (deprecated)
 description: List known entities sorted by recent activity
 icon: list
 ---
+
+<Warning>
+  **Deprecated in v0.7.0.** Use `recall({})` (no params) instead. The `recall` tool returns an entity overview when called without `query` or `path`.
+</Warning>
 
 List the entities currently known to this memory store, sorted by recent activity. Use at the start of a new session ("what do I know about?") before issuing specific `recall` queries.
 

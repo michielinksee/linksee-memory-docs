@@ -1,8 +1,12 @@
 ---
-title: forget
+title: forget (deprecated)
 description: Delete a memory by ID or run auto-forgetting sweep
 icon: eraser
 ---
+
+<Warning>
+  **Deprecated in v0.7.0.** Use `remember({ forget: true, memory_id: <id> })` instead. Auto-forgetting now runs automatically on server startup.
+</Warning>
 
 Explicitly delete a memory by ID, or run auto-forgetting across all memories based on the Ebbinghaus forgetting curve.
 

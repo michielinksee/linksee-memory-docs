@@ -1,14 +1,54 @@
 ---
 title: recall
-description: Retrieve memories ranked by relevance, heat, and importance
+description: Search memories, get file history, or list entities — unified read tool
 icon: magnifying-glass
 ---
 
-Your persistent memory across all AI tools. When the user says "use linksee" or asks about past decisions, context, or preferences, call this first. Returns memories ranked by a composite score of relevance, heat, momentum, and importance.
+Your persistent memory across all AI tools. This is the **unified read tool** — it handles search, file history, and entity overview based on which parameters you provide.
+
+<Info>
+  **v0.7.0**: `recall` replaces the previous `recall` + `recall_file` + `list_entities` tools. Mode is auto-detected from params.
+</Info>
+
+## Modes
+
+### Search (provide `query`)
+
+Returns memories ranked by a composite score of relevance, heat, momentum, and importance.
+
+```json
+{
+  "query": "Supabase connection pooling",
+  "layer": "caveat",
+  "max_tokens": 3000
+}
+```
+
+### File history (provide `path`)
+
+Returns complete edit history of a file across all sessions, with per-edit user-intent context.
+
+```json
+{
+  "path": "server.ts"
+}
+```
+
+When both `path` and `query` are provided, results from file history and memory search are merged.
+
+### Entity overview (no params)
+
+Returns entity list sorted by momentum — the cheapest "what do I know?" primitive.
+
+```json
+{}
+```
 
 ## Parameters
 
-<ParamField body="query" type="string" required>
+### Search mode
+
+<ParamField body="query" type="string">
   What you want to remember. Free-text, entity name, or FTS5 MATCH expression.
 </ParamField>
 
@@ -17,7 +57,7 @@ Your persistent memory across all AI tools. When the user says "use linksee" or 
 </ParamField>
 
 <ParamField body="layer" type="string">
-  Filter by memory layer. Accepts aliases (e.g. `warnings` → `caveat`).
+  Filter by memory layer. Accepts aliases (e.g. `warnings` -> `caveat`).
 </ParamField>
 
 <ParamField body="altitude" type="string">
@@ -56,7 +96,13 @@ Your persistent memory across all AI tools. When the user says "use linksee" or 
   Set `false` for preview / listing queries that should not bump heat scores.
 </ParamField>
 
-## Ranking
+### File history mode
+
+<ParamField body="path" type="string">
+  File path substring to match against edit history. Can be a filename (`search-services.ts`), partial path (`src/db/`), or full absolute path.
+</ParamField>
+
+## Ranking (search mode)
 
 Memories are ranked by a composite score:
 
@@ -73,6 +119,8 @@ score = 0.45 * relevance + 0.25 * heat + 0.15 * momentum + 0.15 * importance
 
 ## Response
 
+### Search mode
+
 Each memory in the response includes:
 
 - `match_reasons` — array explaining why this memory ranked (e.g. `content_match_fts`, `entity_name_match`, `heat:hot`, `pinned`, `caveat_protected`)
@@ -80,16 +128,30 @@ Each memory in the response includes:
 - `has_more` — boolean indicating if more results exist beyond the current page
 - `stopped_by` — whether iteration stopped at `tokens`, `limit`, or `end`
 
-## Example
+### File history mode
 
-```json
-{
-  "query": "Supabase connection pooling",
-  "layer": "caveat",
-  "max_tokens": 3000
-}
-```
+| Field | Description |
+|---|---|
+| `paths_matched` | List of file paths that matched the substring |
+| `total_edits` | Total number of physical edits recorded |
+| `first_edit` / `last_edit` | Date range of edit history |
+| `sessions_involved` | Number of distinct sessions that edited this file |
+| `daily_breakdown` | Edits per day, grouped by operation type |
+| `user_intents` | Distinct user-intent snippets, ordered by recency |
+| `linked_memories` | Related memories with entity name and preview |
+
+### Entity overview mode
+
+Each entity includes: `name`, `kind`, `memory_count`, layer breakdown (`goal_count`, `caveat_count`, etc.), `momentum_score`.
 
 <Info>
   **Dual search**: Recall uses both FTS5 full-text search (BM25-ranked, trigram tokenizer) and LIKE fallback, merging and deduplicating results. This ensures both exact and fuzzy matches are found, including Japanese text.
 </Info>
+
+## Migration from pre-v0.7
+
+| Old call | New equivalent |
+|---|---|
+| `recall({ query: "..." })` | `recall({ query: "..." })` (unchanged) |
+| `recall_file({ path_substring: "server.ts" })` | `recall({ path: "server.ts" })` |
+| `list_entities({ kind: "project" })` | `recall({})` (no params = entity overview) |

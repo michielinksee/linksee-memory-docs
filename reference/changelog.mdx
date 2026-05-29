@@ -4,6 +4,43 @@ description: Version history and release notes
 icon: clock-rotate-left
 ---
 
+## v0.7.1
+
+**Review Fixes** — 2026-05-29
+
+Based on Opus 4.7 design review of v0.7.0:
+
+- **Required params guidance**: `remember` tool description now includes "REQUIRED PARAMS BY MODE" section so LLMs know exactly which fields are needed for create vs update vs delete
+- **Migration guidance**: Deprecated tool names (`forget`, `recall_file`, etc.) return specific migration examples instead of generic errors
+- **recall path+query merge**: When both `path` and `query` are provided to `recall`, results from file history and memory search are merged
+- **Auto-consolidate safety**: Table existence check via `sqlite_master` before querying `consolidations` table, preventing errors on fresh databases
+
+## v0.7.0
+
+**3-Tool Unified Surface** — 2026-05-29
+
+8 tools unified into 3 for cross-LLM consistency, following Context7's proven pattern.
+
+**Breaking change**: The following tools are removed from the MCP surface:
+
+| Old tool | New equivalent |
+|---|---|
+| `forget` | `remember({ forget: true, memory_id: <id> })` |
+| `update_memory` | `remember({ memory_id: <id>, content: "..." })` |
+| `recall_file` | `recall({ path: "server.ts" })` |
+| `list_entities` | `recall({})` (no params = entity overview) |
+| `consolidate` | Auto-runs on server startup (7-day threshold) |
+
+**New unified tools:**
+- **`remember`** — create + update + delete in one tool. Mode inferred from params
+- **`recall`** — search + file history + overview in one tool. Mode inferred from params
+- **`read_smart`** — unchanged
+
+**Other changes:**
+- Auto-consolidate on server startup (non-blocking, 7-day threshold)
+- Claude Code Plugin bundle (`claude plugin add -- linksee-memory`)
+- Deprecated tool names return migration guidance with examples
+
 ## v0.6.0
 
 **3-Axis Memory** — 2026-05

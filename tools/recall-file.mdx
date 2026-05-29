@@ -1,8 +1,12 @@
 ---
-title: recall_file
+title: recall_file (deprecated)
 description: Get the complete edit history of a file across all sessions
 icon: file-lines
 ---
+
+<Warning>
+  **Deprecated in v0.7.0.** Use `recall({ path: "filename.ts" })` instead. The `recall` tool now handles file history when a `path` parameter is provided.
+</Warning>
 
 Get the **complete edit history** of a file across all sessions, with per-edit user-intent context. Returns total edit count, daily breakdown, distinct user intents that drove the edits, and linked memories.
 

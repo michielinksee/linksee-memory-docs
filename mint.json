@@ -67,16 +67,21 @@
       ]
     },
     {
-      "group": "Tools",
+      "group": "Tools (v0.7)",
       "pages": [
         "tools/remember",
         "tools/recall",
+        "tools/read-smart"
+      ]
+    },
+    {
+      "group": "Legacy Tools (pre-v0.7)",
+      "pages": [
         "tools/update-memory",
         "tools/list-entities",
         "tools/forget",
         "tools/consolidate",
-        "tools/recall-file",
-        "tools/read-smart"
+        "tools/recall-file"
       ]
     },
     {

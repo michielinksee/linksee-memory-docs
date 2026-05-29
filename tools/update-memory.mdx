@@ -1,8 +1,12 @@
 ---
-title: update_memory
+title: update_memory (deprecated)
 description: Atomically edit an existing memory in-place
 icon: pen-to-square
 ---
+
+<Warning>
+  **Deprecated in v0.7.0.** Use `remember({ memory_id: <id>, content: "..." })` instead. The `remember` tool now handles updates when a `memory_id` is provided.
+</Warning>
 
 Atomically edit an existing memory in-place. Preferred over `forget` + `remember` because it preserves `memory_id`, which matters for `session_file_edits` links and referential integrity.
 
