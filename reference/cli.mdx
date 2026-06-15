@@ -6,36 +6,40 @@ icon: terminal
 
 The `linksee-memory` npm package includes several CLI utilities beyond the MCP server itself.
 
+<Info>
+  Each CLI is reachable two ways: as a subcommand via `npx -y linksee-memory <sub>` (no install needed — the package name resolves on a cold machine), and, if `linksee-memory` is installed on your PATH, as the standalone `linksee-memory-<sub>` bin (e.g. `linksee-memory-setup`). The runnable examples below use the cold-safe `npx -y linksee-memory <sub>` form.
+</Info>
+
 ## linksee-memory
 
 The main MCP server. Runs in **stdio mode** — typically launched by your MCP client, not directly.
 
 ```bash
-linksee-memory
+npx -y linksee-memory
 ```
 
-## linksee-memory-setup
+## linksee-memory setup
 
 Interactive initial setup. Creates the database directory and initializes the schema.
 
 ```bash
-linksee-memory-setup
+npx -y linksee-memory setup
 ```
 
-## linksee-memory-install-skill
+## linksee-memory install-skill
 
 Install the Linksee Memory skill into Claude Code's MCP configuration.
 
 ```bash
-linksee-memory-install-skill
+npx -y linksee-memory install-skill
 ```
 
-## linksee-memory-stats
+## linksee-memory stats
 
 Display database statistics: entity count, memory count, layer breakdown, heat distribution, database size.
 
 ```bash
-linksee-memory-stats
+npx -y linksee-memory stats
 ```
 
 Example output:
@@ -59,18 +63,18 @@ File snapshots: 67
 DB size:      4.2 MB
 ```
 
-## linksee-memory-import
+## linksee-memory import
 
 Import session transcripts or external data into the memory store.
 
 ```bash
-linksee-memory-import <file>
+npx -y linksee-memory import <file>
 ```
 
-## linksee-memory-sync
+## linksee-memory sync
 
 Sync a session's data. Useful for manual synchronization after disconnects.
 
 ```bash
-linksee-memory-sync <session-id>
+npx -y linksee-memory sync <session-id>
 ```

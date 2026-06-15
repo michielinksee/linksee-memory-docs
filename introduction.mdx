@@ -14,7 +14,7 @@ Sessions end. Agents forget. You're juggling several projects, and so is your ag
     Claude Code, Cursor, Windsurf, OpenAI Codex, Gemini CLI — one memory, all agents.
   </Card>
   <Card title="Product map" icon="map">
-    `where_am_i` + the `linksee-memory-map` CLI locate any file on your map and report its blast radius.
+    `where_am_i` + the `linksee-memory map` CLI locate any file on your map and report its blast radius.
   </Card>
   <Card title="Drift detection" icon="radar">
     Reconcile what you decided against the actual code — convergence / divergence with evidence.
@@ -29,7 +29,7 @@ Sessions end. Agents forget. You're juggling several projects, and so is your ag
 One command sets up the MCP server, the skill, and the auto-capture hook:
 
 ```bash
-npx linksee-memory-setup
+npx -y linksee-memory setup
 ```
 
 Restart your agent. Done. (Prefer manual config? See [Installation](/installation).)
@@ -41,7 +41,7 @@ Restart your agent. Done. (Prefer manual config? See [Installation](/installatio
 ## Key Features
 
 - **11 MCP tools** — memory (`remember`, `recall`, `read_smart`), drift (`drift_status`, `declare_anchor`, `check_decision`, `resolve_drift`, `flag_proposals`, `resolve_proposal`, `dream`), and **`where_am_i`** — locate the current file on your product map + its blast radius.
-- **`linksee-memory-map` CLI** — `where` · `affects` · `explain` · `status` · `next` · `reconcile` · `inspect --json` · `blueprint`. A `map.yaml` (git source of truth) describes how value reaches your user; the reconciler checks it against your code. Bilingual via `--lang ja`.
+- **`linksee-memory map` CLI** — `where` · `affects` · `explain` · `status` · `next` · `reconcile` · `inspect --json` · `blueprint`. A `map.yaml` (git source of truth) describes how value reaches your user; the reconciler checks it against your code. Bilingual via `--lang ja`.
 - **6-layer structured memory** — goal / context / emotion / implementation / caveat / learning, with an Ebbinghaus forgetting curve (caveats and goals protected forever).
 - **AST-aware token-saving reads** — `read_smart` returns only changed chunks (50–99% fewer tokens on re-reads).
 - **Local-first & bilingual** — one SQLite file, no network, full Japanese + English (trigram FTS5).

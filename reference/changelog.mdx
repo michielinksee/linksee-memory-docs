@@ -4,14 +4,22 @@ description: Version history and release notes
 icon: clock-rotate-left
 ---
 
+## v0.11.1
+
+**Cold-start fixes** — 2026-06-16
+
+- **Run any CLI through the package name:** `npx -y linksee-memory setup` (and `map`, `sync`, `guard`, `stats`, `import`, `install-skill`). A fresh user couldn't reach the standalone bins (`linksee-memory-setup`, …) with `npx` — npx resolves package names, not sibling bin names. The main bin now dispatches subcommands; the standalone bins remain as aliases.
+- **`map` exits gracefully** with a next-step message when no `map.yaml` exists yet (was a raw stack trace).
+- **serverInfo** reports the real package version (was pinned to an old string).
+
 ## v0.11.0
 
-**The Map: `where_am_i` + `linksee-memory-map`** — 2026-06-15
+**The Map: `where_am_i` + `linksee-memory map`** — 2026-06-15
 
 Memory is the entry point; the product map is the new surface.
 
 - **`where_am_i`** (11th MCP tool) — locate the current file/topic on the Current Truth Map and get its blast radius (no args → infer from your recent edits).
-- **`linksee-memory-map`** CLI — `where` · `affects` · `explain` · `status` · `next` · `reconcile` · `inspect --json` · `blueprint`. A git-tracked `map.yaml` checked against your code with file:line evidence. Bilingual (`--lang ja`).
+- **`linksee-memory map`** CLI — `where` · `affects` · `explain` · `status` · `next` · `reconcile` · `inspect --json` · `blueprint`. A git-tracked `map.yaml` checked against your code with file:line evidence. Bilingual (`--lang ja`).
 - Graded blast radius (`must fix together` / `should align` / `fyi`), declared-vs-reality verdicts, anti-graveyard expiry for accounted-for drift, and per-project keys for juggling many projects. See [Product map & drift](/concepts/product-map).
 
 ## v0.8.0
