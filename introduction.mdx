@@ -1,82 +1,57 @@
 ---
 title: Introduction
-description: Cross-agent memory MCP with 6-layer structured memory and token-saving file diff cache
+description: A local-first memory layer for coding agents — tied to a product map that catches when your README, docs, and code drift apart.
 ---
 
 ## What is Linksee Memory?
 
-Linksee Memory is a **local-first MCP server** that gives every AI agent on your machine persistent, structured memory.
+Linksee Memory is a **local-first MCP server** that gives every AI agent on your machine persistent, structured memory — and ties that memory to a **product map**, so it can also catch when your README, docs, and code quietly drift apart.
 
-Sessions end. Agents forget. Linksee Memory fixes that.
-
-It stores not just *what happened*, but **why it failed**, **how you fixed it**, and **what to never do again** — organized across 6 cognitive layers, shared via a single SQLite file.
+Sessions end. Agents forget. You're juggling several projects, and so is your agent. Linksee Memory fixes the forgetting — then uses the same memory + map to catch drift, with file:line evidence.
 
 <CardGroup cols={2}>
   <Card title="Cross-agent" icon="link">
     Claude Code, Cursor, Windsurf, OpenAI Codex, Gemini CLI — one memory, all agents.
   </Card>
-  <Card title="Token-saving" icon="bolt">
-    AST-aware file diff cache. Up to 99% token reduction on re-reads.
+  <Card title="Product map" icon="map">
+    `where_am_i` + the `linksee-memory-map` CLI locate any file on your map and report its blast radius.
   </Card>
-  <Card title="WHY-layered" icon="layer-group">
-    6 layers: goal / context / emotion / implementation / caveat / learning.
+  <Card title="Drift detection" icon="radar">
+    Reconcile what you decided against the actual code — convergence / divergence with evidence.
   </Card>
   <Card title="Local-first" icon="hard-drive">
-    No cloud. No account. One SQLite file on your machine.
+    No cloud. No account. No network calls. One SQLite file on your machine.
   </Card>
 </CardGroup>
 
 ## Quick Start
 
-Install with a single command:
+One command sets up the MCP server, the skill, and the auto-capture hook:
 
 ```bash
-npm install -g linksee-memory
+npx linksee-memory-setup
 ```
 
-Add to your MCP client config:
-
-```json claude_desktop_config.json
-{
-  "mcpServers": {
-    "linksee-memory": {
-      "command": "linksee-memory"
-    }
-  }
-}
-```
-
-Restart your agent. Done.
+Restart your agent. Done. (Prefer manual config? See [Installation](/installation).)
 
 <Tip>
-  Linksee Memory works with **any MCP-compatible client** — Claude Desktop, Claude Code, Cursor, Windsurf, Cline, and more.
+  Works with **any MCP-compatible client** — Claude Desktop, Claude Code, Cursor, Windsurf, Cline, and more.
 </Tip>
 
 ## Key Features
 
-- **3 unified tools** — `remember` (save / update / delete), `recall` (search / file history / overview), `read_smart` (token-saving reads)
-- **4 static resources** — `memory://stats`, `memory://hot`, `memory://recent`, `memory://caveats`
-- **3 resource templates** — `memory://entity/{name}`, `memory://layer/{layer}`, `memory://memory/{id}`
-- **5 prompts** — session summarization, caveat extraction, recall-and-write discipline, entity handoff, weekly consolidation
-- **Ebbinghaus forgetting curve** — cold memories fade; caveats and goals are protected forever
-- **AST-aware chunking** — TS/JS/Python files are split by function/class, not arbitrary line counts
-- **Bilingual** — full Japanese + English support with trigram FTS5 tokenizer
+- **11 MCP tools** — memory (`remember`, `recall`, `read_smart`), drift (`drift_status`, `declare_anchor`, `check_decision`, `resolve_drift`, `flag_proposals`, `resolve_proposal`, `dream`), and **`where_am_i`** — locate the current file on your product map + its blast radius.
+- **`linksee-memory-map` CLI** — `where` · `affects` · `explain` · `status` · `next` · `reconcile` · `inspect --json` · `blueprint`. A `map.yaml` (git source of truth) describes how value reaches your user; the reconciler checks it against your code. Bilingual via `--lang ja`.
+- **6-layer structured memory** — goal / context / emotion / implementation / caveat / learning, with an Ebbinghaus forgetting curve (caveats and goals protected forever).
+- **AST-aware token-saving reads** — `read_smart` returns only changed chunks (50–99% fewer tokens on re-reads).
+- **Local-first & bilingual** — one SQLite file, no network, full Japanese + English (trigram FTS5).
 
 ## How It Works
 
-```mermaid
-graph LR
-    A[Agent Session] -->|remember| B[(SQLite)]
-    B -->|recall| C[Next Session]
-    B -->|read_smart| D[Diff Cache]
-    D -->|changed chunks only| C
-    B -->|consolidate| E[Compressed Learnings]
-```
-
-1. **During a session**, the agent calls `remember` to store decisions, caveats, and context
-2. **On the next session**, the agent calls `recall` to retrieve relevant memories ranked by relevance, heat, and importance
-3. **For file re-reads**, `read_smart` returns only changed chunks — saving 50-99% tokens
-4. **Over time**, auto-consolidation compresses cold memories into learning-layer summaries while preserving caveats
+1. **During a session**, the agent calls `remember` to store decisions, caveats, and context.
+2. **On the next session**, `recall` retrieves relevant memories ranked by relevance, heat, and importance.
+3. **Across the product**, a `map.yaml` records how those decisions reach the user; `reconcile` checks the map against the actual code and flags drift with file:line evidence.
+4. **Anytime**, `where_am_i` tells the agent where it is on the map and what else a change would touch.
 
 ## System Requirements
 
@@ -93,10 +68,10 @@ graph LR
   <Card title="Quick Start" icon="rocket" href="/quickstart">
     Your first remember → recall flow in 2 minutes
   </Card>
+  <Card title="Product map & drift" icon="map" href="/concepts/product-map">
+    where_am_i, the map CLI, and how drift detection works
+  </Card>
   <Card title="Memory Layers" icon="layer-group" href="/concepts/memory-layers">
     Understand the 6-layer structure
-  </Card>
-  <Card title="Tools Reference" icon="wrench" href="/tools/remember">
-    Full API reference for all 3 tools
   </Card>
 </CardGroup>

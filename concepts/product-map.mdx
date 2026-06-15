@@ -1,0 +1,40 @@
+---
+title: Product map & drift
+description: A map.yaml describes how value reaches your user; where_am_i and the linksee-memory-map CLI navigate it and catch drift.
+---
+
+## The idea
+
+Memory records *what you decided*. A **product map** records *how those decisions reach the user* — discover → understand → try → adopt → retain → monetize → expand — with typed dependencies between the pieces (README, npm listing, onboarding, the engine behind them). Reconciling the two against the actual code is just a diff, with file:line evidence. That diff is drift detection.
+
+## `where_am_i` (MCP tool)
+
+The per-turn re-anchor. Given a topic, a node id, or **no arguments at all** (it infers from your recent edits), it locates you on the map and returns the **blast radius** — what else becomes suspect if you change this. Editing the README implicates the LP and the docs; `where_am_i` grades how strongly: `must fix together` vs `should align` vs `fyi`.
+
+## `linksee-memory-map` (CLI)
+
+`map.yaml` (repo root) is the desired-state source of truth — git-tracked and reviewable. The CLI answers the questions an engineer actually has:
+
+```bash
+linksee-memory-map where README.md   # where am I, and what does this file touch?
+linksee-memory-map explain readme    # why this state? — declared vs reality, with file:line evidence
+linksee-memory-map status            # whole-project health + what needs attention
+linksee-memory-map reconcile         # re-check the map against the real code/files
+```
+
+Example — a README that documents an `--export` flag the code never implemented:
+
+```
+$ linksee-memory-map explain readme
+STATUS    reality: drifted
+EVIDENCE  ✓ README documents the --export flag    README.md:11
+          ✗ src/cli.js implements --export          not found
+FIX       implement --export, or drop the claim
+AFFECTS   docs-site, cli-engine  (must fix together)
+```
+
+It isn't grep: the map knows the dependencies, grades their strength, and shows the evidence. Add `--lang ja` for Japanese labels. Other commands: `affects`, `next`, `inspect --json`, `blueprint`.
+
+## How a verdict is decided
+
+Each map node can declare how to verify itself from reality — a `signal` / `regex` / `section_contains` / file check. The reconciler runs it and overlays a verdict (**convergence** / **divergence**) that overrides the hand-declared status. An "accounted-for" drift (deferred on purpose) must carry an expiry or release condition, so it can't quietly become a drift graveyard.

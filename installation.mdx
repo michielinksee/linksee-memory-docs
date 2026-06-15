@@ -3,17 +3,25 @@ title: Installation
 description: Install Linksee Memory and connect it to your MCP client
 ---
 
-## Install the package
+## Install
+
+The fastest path — one command sets up the MCP server, the skill, and the auto-capture hook:
 
 ```bash
-npm install -g linksee-memory
+npx linksee-memory-setup
 ```
 
 <Info>
   Requires **Node.js 20+**. Check your version with `node --version`.
 </Info>
 
-## Configure your MCP client
+Prefer to wire it up by hand? Install globally and add the config for your client below:
+
+```bash
+npm install -g linksee-memory
+```
+
+## Configure your MCP client (manual)
 
 Add Linksee Memory to your client's MCP server configuration.
 
