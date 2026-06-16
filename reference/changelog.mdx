@@ -4,6 +4,13 @@ description: Version history and release notes
 icon: clock-rotate-left
 ---
 
+## v0.11.3
+
+**Robustness + MCP hygiene** — 2026-06-16
+
+- **Corrupt-DB recovery:** an unreadable memory DB is preserved as `memory.db.corrupt-<timestamp>` and a fresh one is created, instead of crashing with a raw SQLite error.
+- **`recall`** tool description no longer nudges editing the system prompt.
+
 ## v0.11.2
 
 **More cold-start hardening** — 2026-06-16
