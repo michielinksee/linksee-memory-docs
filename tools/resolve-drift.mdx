@@ -1,0 +1,58 @@
+---
+title: resolve_drift
+description: Close the loop — record the human's verdict on a drifting anchor, and make the next detection honour it
+icon: check-double
+---
+
+A detection is a question. `resolve_drift` is the answer, and the answer **changes what happens next**: the gate, the map and the digest all read it. (They did not always — three separate layers once recorded verdicts the enforcement side ignored. That is fixed, and tested.)
+
+## Actions on an anchor
+
+| `action` | Meaning | Effect |
+|---|---|---|
+| `fix` | "We fixed reality to match the decision." | Open edges resolved → 🔵 aligned |
+| `supersede` | "Intent evolved; this is the new direction." | The old anchor stops gating and is marked accounted; the **new** anchor (`superseded_by`) keeps enforcing. |
+| `acknowledge` | "We know; parking it." | ⚪ held until `review_after`, then reopens as 🔴 |
+| `dismiss` | "False positive." | Edges closed **and the gate stops firing** on it. Pass `hit_term` to silence just that word and keep the anchor's other detections; pass `gate: false` to close the edges but keep the gate watching. |
+| `harden` | "It was re-injected and still violated — enforce it." | `gate_mode: hard` → the next contradicting action is **denied** |
+| `soften` | "Back off to a warning." | `gate_mode: soft` |
+
+## Actions on a proposal
+
+With `candidate_id` (from `recall({ dream: true })`) instead of `anchor_id`:
+
+| `action` | Effect |
+|---|---|
+| `surface` | Keep it visible for the human to decide |
+| `dismiss` | Retire it — outdated, out of phase, or implicitly resolved |
+
+A `rationale` is required and should reference the North Star. (Absorbs the old `resolve_proposal`.)
+
+## Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| `anchor_id` | number | The anchor to resolve. |
+| `candidate_id` | number | A proposal to resolve instead (with `surface` / `dismiss`). |
+| `action` | string | See above. |
+| `rationale` | string | Why. Recorded for the audit trail and for whoever reads this next. |
+| `superseded_by` | number | For `supersede`: the replacing anchor's id. |
+| `review_after` | string | For `acknowledge`: ISO date to re-check. |
+| `hit_term` | string | For `dismiss`: silence only this match term at the gate. |
+| `gate` | boolean | For `dismiss`: `false` = close the edges but keep the gate watching. Default `true`. |
+
+## Which dismiss?
+
+Two different verdicts hide behind "dismiss":
+
+- **"This detection was wrong, the rule is right."** → `dismiss` with `gate: false`. Example: an anchor forbidding destructive migrations matched a comment in `migrate.ts`. Close the edge; keep watching for `ALTER TABLE … DROP`.
+- **"This word will never be a real hit for this anchor."** → `dismiss` with `hit_term`. Example: a product name that appears in file paths. The anchor's other signals keep working.
+- **"This anchor should stop bothering me at the gate."** → `dismiss` with no `hit_term`. The map still shows it; the gate ignores it.
+
+## Example: you changed your mind
+
+```json
+{ "anchor_id": 12, "action": "supersede", "superseded_by": 19, "rationale": "Consistency requirement relaxed 2026-09-07; MongoDB adopted." }
+```
+
+After this, the guard no longer fires on `mongoose` for #12 — and starts watching #19's signals instead.

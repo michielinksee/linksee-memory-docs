@@ -1,0 +1,78 @@
+---
+title: declare_anchor
+description: Record a normative claim the drift detector will check — or park an option the user never addressed
+icon: anchor
+---
+
+An anchor is a **normative** claim: *we decided X*, *Y is forbidden*, *Z must always hold*. The drift detector later checks anchors against committed reality; the re-injection guard re-surfaces them before an agent acts.
+
+Anchors come **only from explicit declaration** — never from pattern-mining a transcript. If the user made a decision in conversation, the shortest path is [`remember({ content, anchor: {} })`](/tools/remember), which stores the memory and declares the anchor in one call. Use `declare_anchor` directly when you need the full set of fields.
+
+## Kinds
+
+| `kind` | Use for | Needs `violation_signal`? |
+|---|---|---|
+| `decision` | "We chose A over B" | Yes — the forbidden strings the gate should catch |
+| `prohibition` | "Never do X" | Yes |
+| `constraint` | "Z must always hold" | No — re-injected on boot and when its scope is touched; no contradiction can be detected without signals |
+| `proposal` | An option you presented that the user never addressed — an orphaned fork. Lands as a review item; triaged later via `recall({ dream: true })`. (Absorbs the old `flag_proposals`.) | No |
+
+## Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| `kind` | string | **Required.** See above. |
+| `statement` | string | **Required.** The claim, ≥ 8 chars. |
+| `rationale` | string | Why. This is what a successor reads. |
+| `violation_signal` | string[] | Strings whose presence in an action = a contradiction (`["mongoose", "MongoClient"]`). Matched with word boundaries, a negation window and citation-without-call guards. |
+| `affects` | string[] | Path globs that scope the anchor. A scoped anchor fires on files under its paths; on `Bash` (no path) a signal hit is enough. |
+| `detect_terms` | string[] | Topical keywords for an unscoped anchor — the gate reminds you when they appear. Keep them specific; `map` and `edge` fire everywhere. |
+| `domain` | string | `strategy` · `product` · `engineering` · `growth` · … |
+| `decision_mode` | string | `hypothesis` · `constraint` · `commitment` · `source_of_truth` (display classification). |
+| `confidence` | number | 0–1. |
+| `review_after` | string | ISO date for the next review. |
+| `node_type` | string | Free label, e.g. `north_star`. A North Star is the frame `recall({ dream: true })` triages proposals against. |
+| `decided` / `siblings` / `session_context` | — | For `kind: "proposal"`: what the user chose instead, the other options, one line of context. |
+
+## Example
+
+```json
+{
+  "kind": "prohibition",
+  "statement": "Do not adopt MongoDB as the primary store",
+  "rationale": "Rejected 2026-09-04: it does not meet the strong-consistency requirement. Postgres it is.",
+  "violation_signal": ["mongoose", "MongoClient", "MONGODB_URI"],
+  "affects": ["src/db/**"],
+  "domain": "engineering"
+}
+```
+
+From now on, an Edit/Write/Bash containing `mongoose` gets this back before it runs:
+
+```
+⚠ Heads up — this action contradicts a decision you locked earlier.
+• [#12] "Do not adopt MongoDB as the primary store" — Rejected 2026-09-04: …
+  ↳ your action contains `mongoose` → contradicts it.
+
+If you are intentionally changing this decision, supersede it on the record:
+  resolve_drift(anchor_id: 12, action: 'supersede', superseded_by: <new anchor>).
+If this match is simply wrong, say so and it stops firing:
+  resolve_drift(anchor_id: 12, action: 'dismiss', hit_term: 'mongoose', rationale: '<why>').
+```
+
+Harden it (`resolve_drift({ action: 'harden' })`) and the same action is **denied** instead of warned.
+
+## A proposal
+
+```json
+{
+  "kind": "proposal",
+  "statement": "[unresolved] LinkedIn outreach to CTOs",
+  "rationale": "Three channels were presented; only X was taken up.",
+  "domain": "growth",
+  "decided": "X",
+  "siblings": ["X", "LinkedIn", "Dev community"]
+}
+```
+
+Returns `anchor_id` and `candidate_id`. Triage later with `recall({ dream: true })` and settle with `resolve_drift({ candidate_id, action: 'surface' | 'dismiss', rationale })`.

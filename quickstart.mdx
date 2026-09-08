@@ -1,123 +1,149 @@
 ---
 title: Quick Start
-description: Your first remember → recall flow in 2 minutes
+description: Record a decision, hand it over, and watch the guard catch the contradiction — in 5 minutes
 ---
 
-## The basic flow
+## The loop
 
-Linksee Memory has one core loop: **remember → recall → act**.
+Linksee Memory has one loop: **decide → remember (and enforce) → hand over → the next agent acts on it, or is stopped before it doesn't.**
 
 ```mermaid
 graph LR
-    A[Session 1] -->|remember| B[(Memory)]
-    B -->|recall| C[Session 2]
-    C -->|remember| B
+    A[Session 1: decide] -->|remember + anchor| B[(Memory)]
+    B -->|recall brief| C[Session 2 / another agent]
+    B -->|guard re-injects before Edit/Write/Bash| C
+    C -->|resolve_drift: fix / supersede / dismiss| B
 ```
 
-## Step 1: Remember something
+## Step 0: Set up (once)
 
-In any conversation with your AI agent, say:
+```bash
+npx -y linksee-memory setup
+```
 
-> "Remember that our production database is PostgreSQL 16 on Supabase, and we had a connection pooling issue last week that was fixed by switching to transaction mode."
+Registers the MCP server, installs the skill, wires the session-capture hook and the re-injection guard for every repo on the machine. Restart your agent.
 
-The agent calls `remember` and stores this as structured memory:
-- **Entity**: your project name
-- **Layer**: `implementation` (how it was done)
-- **Content**: the PostgreSQL + pooling fix details
+## Step 1: Record a decision — and enforce it
 
-<Note>
-  You can also say **"use linksee"** or **"don't forget this"** to trigger memory storage.
-</Note>
+In any conversation:
+
+> "We're going with Postgres for the primary store. MongoDB is rejected — it doesn't meet the strong-consistency requirement. Remember that, and hold me to it."
+
+The agent calls `remember` once:
+
+```json
+{
+  "content": "Postgres is the primary store. MongoDB rejected: does not meet the strong-consistency requirement.",
+  "anchor": { "violation_signal": ["mongoose", "MongoClient", "MONGODB_URI"], "affects": ["src/db/**"] }
+}
+```
+
+`content` is the only required field — the entity defaults to the project you are in, the layer to `learning`. Because `anchor` is set, the memory is also declared as a drift anchor. The response says what that bought you:
+
+```json
+{ "ok": true, "memory_id": 512, "anchor_id": 12, "anchor_kind": "decision",
+  "enforced": "contradictions are detected at the gate; re-injected on boot and in scope" }
+```
 
 ## Step 2: Add a caveat
 
-Caveats are the most valuable layer — pain lessons that should never be forgotten:
+Caveats are the layer that must never be forgotten — pain lessons:
 
-> "Linksee caveat: Never use pgbouncer in session mode with Supabase — it causes prepared statement conflicts. Always use transaction mode."
+> "Linksee caveat: never use pgbouncer in session mode with Supabase — it causes prepared statement conflicts. Always use transaction mode."
 
-This gets stored in the **caveat layer** with `protected = true` — it will never be auto-forgotten.
+Stored in the `caveat` layer with `protected = true`. It will not be auto-forgotten, and it is re-surfaced when the same ground is touched.
 
-## Step 3: Recall in a new session
+## Step 3: Hand over — start a new session
 
-Start a fresh session. Ask:
-
-> "I'm about to set up a new Supabase project. What do I need to know? Check linksee."
-
-The agent calls `recall` and returns your memories, ranked by relevance:
+Open a fresh session (or Cursor, or Codex — same file). The agent's first call is `recall()` with no arguments:
 
 ```json
 {
-  "memories": [
-    {
-      "id": 42,
-      "layer": "caveat",
-      "content": "Never use pgbouncer in session mode with Supabase...",
-      "importance": 0.95,
-      "match_reasons": ["content_match_fts", "caveat_protected", "heat:hot"]
-    },
-    {
-      "id": 41,
-      "layer": "implementation",
-      "content": "Production database is PostgreSQL 16 on Supabase...",
-      "importance": 0.6,
-      "match_reasons": ["content_match_fts", "entity_name_match"]
-    }
-  ]
+  "brief": true,
+  "triage": "14 anchors: 🔵 3 verified · ⚫ 11 unverified",
+  "attention": [],
+  "where": { "project": "myapp", "you_are_here": "You are at \"db-layer\" in stage 「導入」. Touching it implicates 2 node(s): api, docs." },
+  "open_loops": { "proposals": 0, "distill_queue": 2, "friction": 0 },
+  "entities": [{ "name": "myapp", "kind": "project", "memories": 41 }],
+  "next": ["recall({ query }) to search; …", "drift_status() for the full truth map; …"]
 }
 ```
 
-The caveat surfaces first because it's protected and highly important.
+Nothing to re-explain. Then search for what the task needs:
 
-## Step 4: Use read_smart for files
+> "I'm about to set up the new data layer. Check linksee."
 
-When re-reading a file you've seen before:
+```json
+{ "memories": [
+  { "id": 511, "layer": "caveat", "content": { "what": "Never use pgbouncer in session mode with Supabase…" }, "pinned": true },
+  { "id": 512, "layer": "learning", "content": { "what": "Postgres is the primary store. MongoDB rejected…", "anchor_id": 12 } }
+] }
+```
+
+## Step 4: Watch the guard catch the contradiction
+
+Two weeks later, a session that never saw Step 1 starts writing `import mongoose from "mongoose"`. Before the edit runs:
+
+```
+⚠ Heads up — this action contradicts a decision you locked earlier.
+• [#12] "Postgres is the primary store. MongoDB rejected…" — does not meet the strong-consistency requirement.
+  ↳ your action contains `mongoose` → contradicts it.
+
+If you are intentionally changing this decision, supersede it on the record:
+  resolve_drift(anchor_id: 12, action: 'supersede', superseded_by: <new anchor>).
+If this match is simply wrong, say so and it stops firing:
+  resolve_drift(anchor_id: 12, action: 'dismiss', hit_term: 'mongoose', rationale: '<why>').
+```
+
+Harden it — `resolve_drift({ anchor_id: 12, action: "harden" })` — and the same edit is **denied** instead of warned.
+
+## Step 5: Change your mind on the record
+
+> "We're switching to MongoDB after all — the consistency requirement was dropped."
+
+```json
+{ "content": "MongoDB adopted for the primary store; consistency requirement relaxed 2026-09-21.",
+  "anchor": { "violation_signal": ["postgres", "pg"], "affects": ["src/db/**"] } }
+```
+then
+```json
+{ "anchor_id": 12, "action": "supersede", "superseded_by": 19, "rationale": "Requirement relaxed." }
+```
+
+#12 stops firing; #19 starts. The next agent inherits the change *and* the reason — that is what "with the reasons attached" means.
+
+## Step 6: Read files cheaply
 
 > "Read src/db/connection.ts using linksee read_smart"
 
-First read returns full content. On subsequent reads, if the file hasn't changed, you get:
-
-```json
-{
-  "status": "unchanged",
-  "chunks": [
-    { "name": "createPool", "hash": "a1b2c3...", "lines": "1-25" },
-    { "name": "getConnection", "hash": "d4e5f6...", "lines": "27-45" }
-  ],
-  "tokens_saved": "~850 (was ~900, now ~50)"
-}
-```
-
-**~95% token savings** on unchanged files.
+First read returns full content. Unchanged re-reads return ~50 tokens; modified files return only the changed chunks.
 
 ## What to remember
 
-Not everything needs to be memorized. Focus on:
-
 | Worth remembering | Skip |
 |---|---|
-| Decisions and why you made them | Routine code changes |
-| Pain lessons and gotchas | Temporary debug output |
+| Decisions and why — with `anchor` if they should be enforced | Routine code changes |
+| Pain lessons and gotchas (caveats) | Temporary debug output |
 | Architecture choices | One-off questions |
-| User preferences | Content that's already in docs |
-| Project-specific conventions | Generic knowledge |
+| Options you presented that went unaddressed (`declare_anchor({ kind: "proposal" })`) | Content that's already in docs |
 
 <Tip>
-  The `summarize-session` prompt can automatically extract the right memories from a session transcript. Use it at the end of important sessions.
+  The session-capture hook records raw decisions and caveats automatically. Rules archive the acknowledgements and stale ones; `recall({ dream: true })` shows the rest for you to rewrite into clean what/why.
 </Tip>
 
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/tools/recall">
+    The six tools, with every parameter
+  </Card>
+  <Card title="Product map & drift" icon="map" href="/concepts/product-map">
+    How drift is measured, and `recall({ where })`
+  </Card>
   <Card title="Memory Layers" icon="layer-group" href="/concepts/memory-layers">
-    Understand goal / context / emotion / implementation / caveat / learning
+    goal / context / emotion / implementation / caveat / learning
   </Card>
   <Card title="Token Saving" icon="bolt" href="/concepts/token-saving">
-    How read_smart saves 50-99% tokens with AST-aware diffing
-  </Card>
-  <Card title="Tools Reference" icon="wrench" href="/tools/remember">
-    Full parameter docs for all 11 tools
-  </Card>
-  <Card title="Prompts" icon="message" href="/prompts/overview">
-    5 built-in prompts for common workflows
+    How read_smart saves 50–99% on re-reads
   </Card>
 </CardGroup>

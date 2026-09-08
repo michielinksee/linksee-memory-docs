@@ -71,11 +71,15 @@
       ]
     },
     {
-      "group": "Memory tools",
+      "group": "Tools",
       "pages": [
-        "tools/remember",
         "tools/recall",
-        "tools/read-smart"
+        "tools/remember",
+        "tools/read-smart",
+        "tools/drift-status",
+        "tools/declare-anchor",
+        "tools/resolve-drift",
+        "tools/legacy"
       ]
     },
     {

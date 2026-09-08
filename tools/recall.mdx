@@ -1,157 +1,91 @@
 ---
 title: recall
-description: Search memories, get file history, or list entities — unified read tool
+description: Start here — the session brief, search, file history, your position on the map, and the triage session
 icon: magnifying-glass
 ---
 
-Your persistent memory across all AI tools. This is the **unified read tool** — it handles search, file history, and entity overview based on which parameters you provide.
-
-<Info>
-  **v0.7.0**: `recall` replaces the previous `recall` + `recall_file` + `list_entities` tools. Mode is auto-detected from params.
-</Info>
+Your persistent memory across all AI tools. The mode is chosen by which parameters you pass; with **no parameters** it returns the **session brief** — what an agent needs in the first call of a session.
 
 ## Modes
 
-### Search (provide `query`)
-
-Returns memories ranked by a composite score of relevance, heat, momentum, and importance.
-
-```json
-{
-  "query": "Supabase connection pooling",
-  "layer": "caveat",
-  "max_tokens": 3000
-}
-```
-
-### File history (provide `path`)
-
-Returns complete edit history of a file across all sessions, with per-edit user-intent context.
-
-```json
-{
-  "path": "server.ts"
-}
-```
-
-When both `path` and `query` are provided, results from file history and memory search are merged.
-
-### Entity overview (no params)
-
-Returns entity list sorted by momentum — the cheapest "what do I know?" primitive.
+### Session brief (no parameters)
 
 ```json
 {}
 ```
 
+```json
+{
+  "brief": true,
+  "triage": "46 anchors: 🔴 2 drifting · 🟡 1 needs review · 🔵 8 verified · ⚫ 35 unverified",
+  "attention": [{ "id": 26, "state": "drift", "statement": "…", "reality": "…" }],
+  "where": { "project": "linksee-memory", "you_are_here": "You are at \"readme\" in stage 「理解」. Touching it implicates 3 node(s): lp, docs, skill." },
+  "open_loops": { "north_star": { "id": 67, "statement": "…" }, "proposals": 0, "proposals_top": [], "distill_queue": 250, "friction": 4 },
+  "entities": [{ "name": "KanseiLINK", "kind": "project", "memories": 812 }],
+  "next": [
+    "recall({ query }) to search; recall({ path }) for a file's history",
+    "drift_status() for the full truth map; drift_status({ anchor_id }) for one decision",
+    "recall({ dream: true }) to triage proposals and drain the distill queue",
+    "remember({ content, anchor: {} }) to record a decision and enforce it"
+  ]
+}
+```
+
+Attention items in full; everything else as counts plus the exact next calls. Small enough to call freely. `overview: true` returns the old entity list instead.
+
+### Search (`query`)
+
+```json
+{ "query": "Supabase connection pooling", "layer": "caveat" }
+```
+
+Memories ranked by relevance, heat, momentum and importance. FTS5 with a trigram tokenizer, so Japanese and English both work. Filters: `entity_name`, `layer`, `altitude`, `mem_type`, `mem_state`, `band`, `thread_id`. Ranking internals (`heat`, `band`, `composite`, `match_reasons`, `score_breakdown`) are included only with `explain: true` — they roughly double the cost per memory.
+
+### File history (`path`)
+
+```json
+{ "path": "src/db/connection.ts" }
+```
+
+Every recorded edit to the file, each with the **user message that drove it**. Add `scope_to_roots: true` to filter to the workspace.
+
+### Locate on the map (`where`)
+
+```json
+{ "where": "guard hook re-injection" }
+```
+or `{ "where": true }` to auto-locate from the files you edited recently. Returns your node, journey stage, the **blast radius** (what else moves if you touch this) and the decision behind it. Pass `project` when several maps are imported. (Absorbs the old `where_am_i`.)
+
+### Triage session (`dream: true`)
+
+```json
+{ "dream": true, "distill": 10 }
+```
+
+The full set: the North Star, orphaned proposals (each with `candidate_id`), the **distill queue** of raw auto-captured memories to rewrite, and friction (anchors re-surfaced at the gate yet still violated). Resolve proposals with [`resolve_drift({ candidate_id, action })`](/tools/resolve-drift); rewrite distill items with [`remember({ memory_id, content })`](/tools/remember). (Absorbs the old `dream`.)
+
+The distill queue is value-ordered — caveats first, then memories on a named entity, then longer text — and rules have already settled the obvious: acknowledgements, bare paths and 90-day-old never-recalled items carry a `distill_verdict` and are not shown. `distill_total` is the real remainder; `distill` (max 25) is the page size.
+
 ## Parameters
 
-### Search mode
-
-<ParamField body="query" type="string">
-  What you want to remember. Free-text, entity name, or FTS5 MATCH expression.
-</ParamField>
-
-<ParamField body="entity_name" type="string">
-  Narrow results to a specific entity.
-</ParamField>
-
-<ParamField body="layer" type="string">
-  Filter by memory layer. Accepts aliases (e.g. `warnings` -> `caveat`).
-</ParamField>
-
-<ParamField body="altitude" type="string">
-  Filter by cognitive altitude: `mission`, `strategy`, `architecture`, `implementation`.
-</ParamField>
-
-<ParamField body="mem_type" type="string">
-  Filter by memory type: `question`, `comparison`, `decision`, `work`, `outcome`, `learning`, `note`.
-</ParamField>
-
-<ParamField body="mem_state" type="string">
-  Filter by lifecycle state: `open`, `decided`, `in_progress`, `done`, `stalled`, `parked`, `superseded`.
-</ParamField>
-
-<ParamField body="thread_id" type="string">
-  Filter by thread ID — returns all memories in a decision chain or session group.
-</ParamField>
-
-<ParamField body="band" type="string">
-  Filter by heat band: `hot`, `warm`, `cold`, `frozen`.
-</ParamField>
-
-<ParamField body="max_tokens" type="number" default="2000">
-  Approximate token budget. Iteration stops when this budget is consumed or `limit` is reached, whichever comes first.
-</ParamField>
-
-<ParamField body="limit" type="number">
-  Hard cap on number of memories returned.
-</ParamField>
-
-<ParamField body="offset" type="number" default="0">
-  Skip this many top results (pagination). Use `has_more` from prior response to decide next offset.
-</ParamField>
-
-<ParamField body="mark_accessed" type="boolean" default="true">
-  Set `false` for preview / listing queries that should not bump heat scores.
-</ParamField>
-
-### File history mode
-
-<ParamField body="path" type="string">
-  File path substring to match against edit history. Can be a filename (`search-services.ts`), partial path (`src/db/`), or full absolute path.
-</ParamField>
-
-## Ranking (search mode)
-
-Memories are ranked by a composite score:
-
-```
-score = 0.45 * relevance + 0.25 * heat + 0.15 * momentum + 0.15 * importance
-```
-
-| Factor | Weight | Source |
+| Name | Type | Description |
 |---|---|---|
-| Relevance | 45% | FTS5 BM25 score + LIKE match |
-| Heat | 25% | Ebbinghaus decay since last access |
-| Momentum | 15% | Entity activity frequency |
-| Importance | 15% | User-assigned or auto-inferred |
+| `query` | string | Search. Keywords, entity names, or FTS5 expressions. |
+| `path` | string | File history mode. |
+| `where` | string · boolean | Locate on the Current Truth Map. |
+| `dream` | boolean | The triage session. |
+| `distill` | number | With `dream`: page size for the distill queue (default 8, max 25). |
+| `overview` | boolean | Entity list instead of the brief. |
+| `explain` | boolean | Include ranking internals in search results. |
+| `entity_name` · `layer` · `altitude` · `mem_type` · `mem_state` · `band` · `thread_id` | — | Search filters. |
+| `limit` · `offset` · `max_tokens` | — | Pagination and token budget (default 2000). |
+| `project` | string | With `where`: the map project slug. |
+| `mark_accessed` | boolean | `false` for preview queries. |
 
-## Response
+## When to call
 
-### Search mode
-
-Each memory in the response includes:
-
-- `match_reasons` — array explaining why this memory ranked (e.g. `content_match_fts`, `entity_name_match`, `heat:hot`, `pinned`, `caveat_protected`)
-- `score_breakdown` — individual scores for transparency
-- `has_more` — boolean indicating if more results exist beyond the current page
-- `stopped_by` — whether iteration stopped at `tokens`, `limit`, or `end`
-
-### File history mode
-
-| Field | Description |
-|---|---|
-| `paths_matched` | List of file paths that matched the substring |
-| `total_edits` | Total number of physical edits recorded |
-| `first_edit` / `last_edit` | Date range of edit history |
-| `sessions_involved` | Number of distinct sessions that edited this file |
-| `daily_breakdown` | Edits per day, grouped by operation type |
-| `user_intents` | Distinct user-intent snippets, ordered by recency |
-| `linked_memories` | Related memories with entity name and preview |
-
-### Entity overview mode
-
-Each entity includes: `name`, `kind`, `memory_count`, layer breakdown (`goal_count`, `caveat_count`, etc.), `momentum_score`.
-
-<Info>
-  **Dual search**: Recall uses both FTS5 full-text search (BM25-ranked, trigram tokenizer) and LIKE fallback, merging and deduplicating results. This ensures both exact and fuzzy matches are found, including Japanese text.
-</Info>
-
-## Migration from pre-v0.7
-
-| Old call | New equivalent |
-|---|---|
-| `recall({ query: "..." })` | `recall({ query: "..." })` (unchanged) |
-| `recall_file({ path_substring: "server.ts" })` | `recall({ path: "server.ts" })` |
-| `list_entities({ kind: "project" })` | `recall({})` (no params = entity overview) |
+- **First call of every session** — no arguments
+- Before starting any task or touching a file
+- When the user says "before" / 「前に」 / "last time" / "remember when"
+- When an error occurs — have you seen it before?
+- Before a decision — is there a prior decision on this topic?

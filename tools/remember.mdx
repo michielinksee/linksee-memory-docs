@@ -1,132 +1,90 @@
 ---
 title: remember
-description: Save, update, or delete memories — unified tool for all write operations
+description: Save, update, or delete memories — and, in the same call, enforce a decision
 icon: brain
 ---
 
-Save, update, or delete memories that persist across sessions and across AI agents. This is the **unified write tool** — it handles create, update, and delete operations based on which parameters you provide.
+The unified write tool. `content` is the only required field for a new memory; everything an agent used to have to invent — entity, kind, layer — is defaulted. Add `anchor` and the memory is also declared as a drift anchor the guard re-injects before Edit/Write/Bash and on session start.
 
-Memories saved here are accessible from **any** AI agent the user connects to — Claude, GPT, Cursor, Codex, Gemini.
-
-<Info>
-  **v0.7.0**: `remember` replaces the previous `remember` + `update_memory` + `forget` tools. Mode is auto-detected from params.
-</Info>
+Memories are readable from **any** agent the user connects — Claude Code, Cursor, Windsurf, Codex, Gemini CLI.
 
 ## Modes
 
 ### Create (default)
 
-Provide `entity_name` + `entity_kind` + `layer` + `content`:
+```json
+{ "content": "Postgres is the primary store. MongoDB rejected: it does not meet the strong-consistency requirement." }
+```
+
+Defaults: `entity_name` = the project you are in (workspace roots, else the files edited recently), `entity_kind` = `project`, `layer` = `context` (or `learning` when `anchor` is set). The response reports `entity_inferred_from` when the entity was defaulted.
+
+### Create + enforce
 
 ```json
 {
-  "entity_name": "KanseiLink",
-  "entity_kind": "project",
-  "layer": "caveat",
-  "content": "{\"title\":\"freee OAuth Friday deploy\",\"what\":\"Never deploy freee OAuth changes on Friday\",\"why\":\"Their sandbox goes down for maintenance every Friday night JST\"}",
-  "importance": 0.95
+  "content": "Postgres is the primary store. MongoDB rejected: it does not meet the strong-consistency requirement.",
+  "anchor": { "violation_signal": ["mongoose", "MongoClient"], "affects": ["src/db/**"] }
 }
 ```
+
+Stores the memory **and** declares a drift anchor from it, linked both ways (`content.anchor_id` ↔ the anchor's `source_memory_id`). With `violation_signal` the anchor is a `decision` the gate can contradict; without, it is an honest `constraint` — re-injected on boot and when its scope is touched, and the response says so. An invalid anchor spec never loses the memory (`anchor_error` is returned alongside the saved `memory_id`).
+
+`anchor` accepts `true`, `{}`, or `{ kind?, violation_signal?, affects?, detect_terms?, domain?, rationale? }`.
 
 ### Update
 
-Provide `memory_id` + fields to change:
-
 ```json
-{
-  "memory_id": 42,
-  "content": "Updated caveat: verified again 2026-05, still applies",
-  "importance": 0.95
-}
+{ "memory_id": 512, "content": "…", "importance": 0.9 }
 ```
 
-Preserves `memory_id` and `session_file_edits` links. Preferred over delete + create.
+Only `content`, `layer` and `importance` change. Used by the distill loop: rewrite a raw auto-captured memory into a clean what/why and include `"distilled": true` in the content JSON.
 
 ### Delete
 
-Set `forget: true` + `memory_id`:
-
 ```json
-{
-  "forget": true,
-  "memory_id": 42
-}
+{ "memory_id": 512, "forget": true }
 ```
 
-Caveat-layer and pinned memories (importance >= 0.9) are protected and cannot be deleted.
+Caveat-layer and pinned memories cannot be deleted. Update them instead.
 
 ## Parameters
 
-### Create mode (required)
+| Name | Type | Description |
+|---|---|---|
+| `content` | string | **Required for create.** Plain text, or structured JSON with `altitude` / `type` / `state` / `what` / `why`. Plain text is wrapped automatically. |
+| `anchor` | boolean · object | Also declare an enforceable decision. See above. |
+| `entity_name` | string | What the memory is about. Optional — defaults to the current project. |
+| `entity_kind` | string | `person` · `company` · `project` · `concept` · `file` · `other`. Defaults to `project`. |
+| `layer` | string | `goal` · `context` · `emotion` · `implementation` · `caveat` · `learning`. Aliases accepted (`decisions` → learning, `warnings` → caveat, `why` → goal, `how` → implementation). |
+| `importance` | number | 0–1. ≥ 0.9 pins the memory (protected from forgetting). |
+| `thread_id` | string | Group related memories (decision chains). |
+| `memory_id` | number | Update or delete an existing memory. |
+| `forget` | boolean | With `memory_id`: delete. |
+| `force` | boolean | Bypass the paste-back quality check. |
 
-<ParamField body="entity_name" type="string" required>
-  Name of the entity this memory is about (e.g. "MyProject", "Supabase", "Alice").
-</ParamField>
+## Response
 
-<ParamField body="entity_kind" type="string" required>
-  One of: `person`, `company`, `project`, `concept`, `file`, `other`.
-</ParamField>
+```json
+{
+  "ok": true,
+  "memory_id": 512,
+  "entity_id": 7,
+  "layer": "learning",
+  "pinned": false,
+  "entity_inferred_from": "workspace_root",
+  "anchor_id": 12,
+  "anchor_kind": "decision",
+  "enforced": "contradictions are detected at the gate; re-injected on boot and in scope"
+}
+```
 
-<ParamField body="layer" type="string" required>
-  Memory layer. One of: `goal`, `context`, `emotion`, `implementation`, `caveat`, `learning`.
+## Quality check
 
-  Common aliases are accepted:
-  | Alias | Resolves to |
-  |---|---|
-  | `why`, `intent`, `targets` | `goal` |
-  | `background`, `reason`, `timing` | `context` |
-  | `tone`, `feelings`, `mood` | `emotion` |
-  | `impl`, `how`, `tried` | `implementation` |
-  | `warning`, `pain`, `pitfall`, `dont` | `caveat` |
-  | `decision`, `insight`, `growth` | `learning` |
-</ParamField>
+Content that looks like pasted assistant output, a CI log, or an external paste is rejected with `rejected: "quality_check"`. Summarise it in your own words, or pass `force: true` if it really is original.
 
-<ParamField body="content" type="string" required>
-  The memory content. Plain text or JSON with structured axes (title, altitude, type, state, what, why, affects, next_action).
-</ParamField>
+## When to call
 
-### Optional (all modes)
-
-<ParamField body="importance" type="number">
-  `0.0` to `1.0`. Set to **0.9 or higher to pin** a memory — pinned memories are protected from auto-forgetting even outside the caveat layer. Default: auto-assigned based on layer.
-</ParamField>
-
-<ParamField body="thread_id" type="string">
-  Optional thread ID to group related memories (e.g. a session ID or decision chain). Enables decision -> implementation -> outcome tracing.
-</ParamField>
-
-<ParamField body="force" type="boolean" default="false">
-  Bypass the paste-back quality check. Set `true` only when you are sure the content is original user or agent thought, not pasted CI logs or assistant output.
-</ParamField>
-
-### Update mode
-
-<ParamField body="memory_id" type="number">
-  The `memory.id` to update. Get this from a prior `recall` response. When provided without `forget: true`, enters update mode.
-</ParamField>
-
-### Delete mode
-
-<ParamField body="forget" type="boolean" default="false">
-  Set `true` with a `memory_id` to delete that memory.
-</ParamField>
-
-## Behavior
-
-1. **Entity resolution**: 3-tier matching — canonical_key exact -> normalized_name -> case-insensitive name -> insert new entity
-2. **Quality check**: Rejects pasted CI logs, assistant output, and other non-original content (bypass with `force: true`)
-3. **Auto-structuring**: Plain text is wrapped into structured JSON with inferred `altitude`, `type`, and `state` classifications
-4. **Pinning**: Memories with `importance >= 0.9` get `protected = 1`, preventing auto-forgetting
-5. **Events**: Records a `memory_stored` event for momentum tracking
-
-<Warning>
-  Caveat-layer memories are **always protected** regardless of importance score. They survive consolidation and auto-forgetting indefinitely.
-</Warning>
-
-## Migration from pre-v0.7
-
-| Old call | New equivalent |
-|---|---|
-| `update_memory({ memory_id: 42, content: "..." })` | `remember({ memory_id: 42, content: "..." })` |
-| `forget({ memory_id: 42 })` | `remember({ forget: true, memory_id: 42 })` |
-| `forget({ dry_run: true })` | No longer exposed — auto-consolidation handles cleanup on startup |
+- The moment an error or failure occurs → `layer: "caveat"`
+- When a decision is made or approved → `content` + `anchor: {}`
+- When a goal is set → `layer: "goal"`
+- When the user says "remember this" / 「覚えておいて」

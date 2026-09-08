@@ -4,6 +4,66 @@ description: Version history and release notes
 icon: clock-rotate-left
 ---
 
+## v0.16.1
+
+**The triage actually runs** — 2026-09-07
+
+- The 0.16.0 distill triage was gated behind the weekly consolidation sweep and never ran. It now runs on every start, before the first request. On the author's machine: 88 noise + 51 stale archived, 250 left for judgement.
+- `recall({ dream: true })` reports the real remainder as `distill_total`; `distill: N` is honoured.
+
+## v0.16.0
+
+**A queue you can actually drain** — 2026-09-07
+
+- Rule-based triage of raw auto-captured memories: acknowledgements, bare paths and 90-day-old never-recalled items get a `distill_verdict` and leave the queue (never deleted; `needs_distill` stays true because no agent rewrote them).
+- The distill queue is value-ordered; `recall({ dream: true, distill: N })` drains up to 25.
+
+## v0.15.2
+
+**Say what it's for** — 2026-09-07
+
+- npm description, keywords, registry manifests and the README hero now lead with handover; drift detection is the second pillar. README gains "Questions this answers" — the twelve questions people actually type, verbatim.
+
+## v0.15.1
+
+- `resolve_drift({ action: "dismiss", gate: false })` — close the edges as false positives but keep the gate watching.
+
+## v0.15.0
+
+**Six tools** — 2026-09-07
+
+- `recall` · `remember` · `read_smart` · `drift_status` · `declare_anchor` · `resolve_drift`. `where_am_i`, `check_decision`, `flag_proposals`, `dream`, `resolve_proposal` are folded in and hidden from `tools/list` but still answer. See [Legacy names](/tools/legacy).
+- `recall()` with no arguments is the **session brief**.
+
+## v0.14.0
+
+**Remember and enforce; verified and unverified** — 2026-09-07
+
+- `remember`: `content` is the only required field; `anchor: {}` records a decision and enforces it in one call.
+- A fifth state, ⚫ `unverified`: an anchor with no evidence is no longer painted 🔵.
+- Fixed: workspace roots were never read (the reply was validated against the request schema).
+
+## v0.13.1
+
+**Fewer false alarms** — 2026-09-07
+
+- A dismissal now changes the next detection (`hit_term` silences one match term). Scope decides when the action names files; a signal alone counts only on Bash.
+
+## v0.13.0
+
+**On by default** — 2026-09-07
+
+- `setup` wires the re-injection guard into `~/.claude/settings.json` — every repo, not one. `--project-guard` / `--no-guard`.
+- Fixed: a path-scoped anchor could never fire on `Bash`; setup duplicated the Stop hook.
+
+## v0.12.0
+
+**Trust** — 2026-09-05
+
+- The gate honours `supersede`; the truth view reads `drift_edges`; `aligned` no longer claims a convergence it did not check.
+- `drift_status` compact by default (`verbose`); `recall` omits ranking internals unless `explain`.
+- Releases are published from GitHub Actions via npm trusted publishing (OIDC) with provenance.
+
 ## v0.11.3
 
 **Robustness + MCP hygiene** — 2026-06-16

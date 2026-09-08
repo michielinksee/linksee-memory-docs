@@ -1,0 +1,66 @@
+---
+title: drift_status
+description: What's drifting right now — the truth map with evidence, or one decision in depth
+icon: radar
+---
+
+Reads reality against what you decided and returns every active anchor in one of five states. The colour is a claim; the `reality` field is the evidence for it.
+
+| State | Meaning |
+|---|---|
+| 🔴 `drift` | The detector has hard evidence against this anchor and nobody has answered it — an open `contradicts` edge, an expired acknowledgement, or an `at_risk` lifecycle. |
+| 🟡 `review` | A soft signal awaiting a human: a pending candidate, or "declared but not found in reality" (`absent`). |
+| ⚪ `held` | Acknowledged and time-boxed. Reopens as 🔴 when the review date passes. |
+| 🔵 `aligned` | **Verified.** A recorded resolution, or the detector observed reality matching (`implements`). |
+| ⚫ `unverified` | Declared, never checked. No edges, no resolution. Not a problem — but not "fine" either. Give it `affects` / `violation_signal` so the detector can look, or leave it as a note. |
+
+<Info>
+  `unverified` exists because on a real machine 35 of 45 anchors had never been checked and were all painted 🔵. Different colour, different meaning: the detector has no eyes there.
+</Info>
+
+## Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| `anchor_id` | number | Deep-dive into **one** decision instead of the map: state, premises, drift edges, pending candidates. (Absorbs the old `check_decision`.) |
+| `domain` | string | Filter by domain (`strategy`, `product`, `engineering`, `growth`, …). |
+| `decision_mode` | string | Filter: `hypothesis` · `constraint` · `commitment` · `source_of_truth`. |
+| `verbose` | boolean | Return full nodes and all candidates. Default is compact: attention items in full, aligned/unverified one line each per domain, candidates as counts. |
+
+## Response (compact)
+
+```json
+{
+  "ok": true,
+  "triage": "46 anchors: 🔴 2 drifting · 🟡 1 needs review · 🔵 8 verified · ⚫ 35 unverified",
+  "attention": [
+    {
+      "id": 2,
+      "state": "drift",
+      "statement": "Never rebuild the memories table; add fields to content JSON instead.",
+      "reality": "1 open contradiction — db/migrate.ts hit \"alter table memories drop\" (2026-06-12). resolve_drift: fix if reality is wrong, dismiss if false positive."
+    }
+  ],
+  "aligned": [{ "domain": "engineering", "count": 3, "nodes": [{ "id": 58, "statement": "…", "reality": "Accounted for by recorded resolution" }] }],
+  "unverified": [{ "domain": "strategy", "count": 12, "nodes": [{ "id": 27, "statement": "…" }] }],
+  "candidates": { "auto": 10, "suppressed": 3 },
+  "hint": "verbose:true for full nodes; drift_status({ anchor_id }) for one node."
+}
+```
+
+The full form was ~15k tokens for 43 anchors and buried the two that mattered under 41 that did not; the compact form is the default for that reason.
+
+## One decision in depth
+
+```json
+{ "anchor_id": 2 }
+```
+
+Returns the same node plus `affects`, `detect_terms`, `violation_signal`, `driftEdges` (each with verdict, confidence, status) and `pendingCandidates`. `drift_status({ anchor_id })` and the map agree by construction — they read the same state machine.
+
+## When to call
+
+- At session start, if `recall()`'s brief shows 🔴 or 🟡 items
+- Before making a decision — is there already an anchor on this topic?
+- After finishing work — did the state change?
+- When the user asks what's broken, stale, or what to revisit

@@ -1,15 +1,15 @@
 ---
 title: Product map & drift
-description: A map.yaml describes how value reaches your user; where_am_i and the linksee-memory map CLI navigate it and catch drift.
+description: A map.yaml describes how value reaches your user; recall({ where }) and the linksee-memory map CLI navigate it and catch drift.
 ---
 
 ## The idea
 
 Memory records *what you decided*. A **product map** records *how those decisions reach the user* — discover → understand → try → adopt → retain → monetize → expand — with typed dependencies between the pieces (README, npm listing, onboarding, the engine behind them). Reconciling the two against the actual code is just a diff, with file:line evidence. That diff is drift detection.
 
-## `where_am_i` (MCP tool)
+## `recall({ where })` — locate on the map
 
-The per-turn re-anchor. Given a topic, a node id, or **no arguments at all** (it infers from your recent edits), it locates you on the map and returns the **blast radius** — what else becomes suspect if you change this. Editing the README implicates the LP and the docs; `where_am_i` grades how strongly: `must fix together` vs `should align` vs `fyi`.
+The per-turn re-anchor. Given a topic, a node id, or **no arguments at all** (it infers from your recent edits), it locates you on the map and returns the **blast radius** — what else becomes suspect if you change this. Editing the README implicates the LP and the docs; `recall({ where })` grades how strongly: `must fix together` vs `should align` vs `fyi`.
 
 ## `linksee-memory map` (CLI)
 

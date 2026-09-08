@@ -1,0 +1,23 @@
+---
+title: Legacy names
+description: The five tools folded into the six in 0.15 — hidden from tools/list, still answering
+icon: clock-rotate-left
+---
+
+Linksee Memory 0.15 reduced the surface from eleven tools to six. The reason is not tidiness: eight tools had already produced model-dependent behaviour across Claude, GPT, Cursor, Codex and Gemini, and the surface had crept to eleven. Six is what an agent can hold without a manual.
+
+The five folded names are **hidden from `tools/list`** but a call to any of them **still works**, so a skill or agent written against an earlier version does not break.
+
+| Was | Now |
+|---|---|
+| `where_am_i` | `recall({ where: "<topic>" })` — or `recall()` for the session brief, which includes your position |
+| `check_decision` | `drift_status({ anchor_id })` |
+| `flag_proposals` | `declare_anchor({ kind: "proposal", statement, rationale, domain, decided?, siblings? })` — one per proposal; returns `candidate_id` |
+| `dream` | `recall({ dream: true })` — the brief already carries the counts |
+| `resolve_proposal` | `resolve_drift({ candidate_id, action: "surface" \| "dismiss", rationale })` |
+
+Set `LINKSEE_LEGACY_TOOLS=1` to list them again; each description names its replacement.
+
+## Older still
+
+Versions before 0.7 exposed `update_memory`, `forget`, `consolidate`, `recall_file` and `list_entities`. Those were folded into `remember` (update = `memory_id`; delete = `forget: true`), `recall` (`path` for file history; `overview: true` for the entity list) and the startup consolidation sweep. They are not served.

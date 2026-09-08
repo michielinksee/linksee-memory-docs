@@ -1,23 +1,25 @@
 ---
 title: Introduction
-description: A local-first memory layer for coding agents — tied to a product map that catches when your README, docs, and code drift apart.
+description: Hand a project over — to your next session, to another agent, to your successor — with the reasons attached. Local-first memory MCP with drift detection.
 ---
 
 ## What is Linksee Memory?
 
-Linksee Memory is a **local-first MCP server** that gives every AI agent on your machine persistent, structured memory — and ties that memory to a **product map**, so it can also catch when your README, docs, and code quietly drift apart.
+Claude Code forgets everything when you start a new session. Your successor knows even less.
 
-Sessions end. Agents forget. You're juggling several projects, and so is your agent. Linksee Memory fixes the forgetting — then uses the same memory + map to catch drift, with file:line evidence.
+Linksee Memory is a **local-first MCP server** that lets you **hand a project over — to your next session, to Cursor or Codex, to the person after you — with the reasons attached.** Record a decision once and it comes back *before* the agent acts on it: re-injected on session start and ahead of every Edit/Write/Bash that touches it. Change your mind on the record and it stops nagging; leave it and it keeps the next agent from repeating last week's mistake.
+
+Underneath: **drift detection** across every project you run in parallel — which ones quietly left their goal (🔴), which were checked and hold (🔵), which nobody has looked at yet (⚫). One SQLite file that **Claude Code, Cursor, Windsurf, OpenAI Codex and Gemini CLI** all read. Nothing leaves your machine.
 
 <CardGroup cols={2}>
-  <Card title="Cross-agent" icon="link">
-    Claude Code, Cursor, Windsurf, OpenAI Codex, Gemini CLI — one memory, all agents.
-  </Card>
-  <Card title="Product map" icon="map">
-    `where_am_i` + the `linksee-memory map` CLI locate any file on your map and report its blast radius.
+  <Card title="Handover" icon="right-left">
+    `remember({ content, anchor: {} })` records a decision **and** enforces it. The guard re-surfaces it before the agent acts — in this session, the next one, or another agent's.
   </Card>
   <Card title="Drift detection" icon="radar">
-    Reconcile what you decided against the actual code — convergence / divergence with evidence.
+    `drift_status` reads reality against what you decided: 🔴 drift · 🟡 review · ⚪ held · 🔵 verified · ⚫ unverified — with the evidence, not a colour.
+  </Card>
+  <Card title="Cross-agent" icon="link">
+    Claude Code, Cursor, Windsurf, OpenAI Codex, Gemini CLI — one memory, all agents.
   </Card>
   <Card title="Local-first" icon="hard-drive">
     No cloud. No account. No network calls. One SQLite file on your machine.
@@ -26,7 +28,7 @@ Sessions end. Agents forget. You're juggling several projects, and so is your ag
 
 ## Quick Start
 
-One command sets up the MCP server, the skill, and the auto-capture hook:
+One command sets up the MCP server, the skill, the session-capture hook, and the re-injection guard — for every repo on the machine:
 
 ```bash
 npx -y linksee-memory setup
@@ -35,29 +37,46 @@ npx -y linksee-memory setup
 Restart your agent. Done. (Prefer manual config? See [Installation](/installation).)
 
 <Tip>
-  Works with **any MCP-compatible client** — Claude Desktop, Claude Code, Cursor, Windsurf, Cline, and more.
+  Works with **any MCP-compatible client** — Claude Desktop, Claude Code, Cursor, Windsurf, Cline, and more. The re-injection guard is a Claude Code hook; other clients get the memory and the drift map.
 </Tip>
 
-## Key Features
+## Six tools
 
-- **11 MCP tools** — memory (`remember`, `recall`, `read_smart`), drift (`drift_status`, `declare_anchor`, `check_decision`, `resolve_drift`, `flag_proposals`, `resolve_proposal`, `dream`), and **`where_am_i`** — locate the current file on your product map + its blast radius.
-- **`linksee-memory map` CLI** — `where` · `affects` · `explain` · `status` · `next` · `reconcile` · `inspect --json` · `blueprint`. A `map.yaml` (git source of truth) describes how value reaches your user; the reconciler checks it against your code. Bilingual via `--lang ja`.
-- **6-layer structured memory** — goal / context / emotion / implementation / caveat / learning, with an Ebbinghaus forgetting curve (caveats and goals protected forever).
-- **AST-aware token-saving reads** — `read_smart` returns only changed chunks (50–99% fewer tokens on re-reads).
-- **Local-first & bilingual** — one SQLite file, no network, full Japanese + English (trigram FTS5).
+Two pillars, one surface. Memory and drift each get the minimum; nothing else is exposed.
 
-## How It Works
+| Tool | What it does |
+|---|---|
+| [`recall`](/tools/recall) | **Start here.** No arguments → the session brief: what needs attention, where you are on the Map, open loops, top entities. `query` → search · `path` → a file's edit history · `where` → your position and blast radius · `dream: true` → the triage session. |
+| [`remember`](/tools/remember) | **Save / update / delete.** `content` is the only required field. Add `anchor: {}` to record a decision and enforce it in one call. |
+| [`read_smart`](/tools/read-smart) | Token-saving file reader with AST diff caching — re-reads cost ~50 tokens when nothing changed. |
+| [`drift_status`](/tools/drift-status) | "What's drifting right now?" — the truth map with evidence. `anchor_id` → one decision in depth. |
+| [`declare_anchor`](/tools/declare-anchor) | Record a normative claim the detector will check: `decision` / `prohibition` / `constraint` — or `proposal`, an option the user never addressed. |
+| [`resolve_drift`](/tools/resolve-drift) | Close the loop: `fix` · `supersede` · `acknowledge` · `dismiss` · `harden` / `soften`. With `candidate_id`: `surface` or `dismiss` a proposal. |
 
-1. **During a session**, the agent calls `remember` to store decisions, caveats, and context.
-2. **On the next session**, `recall` retrieves relevant memories ranked by relevance, heat, and importance.
-3. **Across the product**, a `map.yaml` records how those decisions reach the user; `reconcile` checks the map against the actual code and flags drift with file:line evidence.
-4. **Anytime**, `where_am_i` tells the agent where it is on the map and what else a change would touch.
+Earlier versions exposed eleven. The five folded names — `where_am_i`, `check_decision`, `flag_proposals`, `dream`, `resolve_proposal` — are hidden from `tools/list` but **still answer when called**. See [Legacy names](/tools/legacy).
+
+## Questions this answers
+
+The wording is deliberate: these are the questions people actually type, kept verbatim.
+
+- **"Claude Code forgets everything when I start a new session."** → Run `setup`. Every session starts with `recall()` — the brief — and your locked decisions are re-injected before the agent acts.
+- **"I want one shared memory between Claude Code, Cursor, and Codex."** → One SQLite file; every client reads it.
+- **"My agent keeps re-implementing things we already decided against."** → `remember({ content, anchor: { violation_signal: [...] } })`. The guard blocks or warns *before* the edit, and tells you how to supersede if you really did change your mind.
+- **"How do I stop Claude Code from repeating the same mistake it made last week?"** → Record it as a `caveat`. It is protected from forgetting and re-surfaced when the same ground is touched.
+- **"Which of my twenty projects has quietly drifted from its goal?"** → `drift_status()` — one line per project, evidence attached.
+
+## How it works
+
+1. **During a session**, the agent calls `remember` to store decisions, caveats and context. A decision with `anchor: {}` also becomes a drift anchor.
+2. **Before it acts**, the guard checks the pending Edit/Write/Bash against your anchors: a hardened contradiction is denied, a softer one is re-injected as context, no match → nothing happens.
+3. **On the next session**, `recall()` opens with the brief; `recall({ query })` retrieves memories ranked by relevance, heat and importance.
+4. **Across the product**, a `map.yaml` records how decisions reach the user; `linksee-memory map reconcile` checks it against the code and flags drift with file:line evidence. `recall({ where: "<topic>" })` tells the agent where it is and what else a change would touch.
 
 ## System Requirements
 
 - Node.js 20+
-- Any MCP-compatible client
-- ~10 MB disk space for the SQLite database
+- Any MCP-compatible client (the guard needs Claude Code hooks)
+- ~10 MB disk for the SQLite database
 
 ## Next Steps
 
@@ -66,10 +85,10 @@ Restart your agent. Done. (Prefer manual config? See [Installation](/installatio
     Detailed setup for every MCP client
   </Card>
   <Card title="Quick Start" icon="rocket" href="/quickstart">
-    Your first remember → recall flow in 2 minutes
+    Remember a decision, hand it over, watch the guard catch the contradiction
   </Card>
   <Card title="Product map & drift" icon="map" href="/concepts/product-map">
-    where_am_i, the map CLI, and how drift detection works
+    The map CLI, `recall({ where })`, and how drift detection works
   </Card>
   <Card title="Memory Layers" icon="layer-group" href="/concepts/memory-layers">
     Understand the 6-layer structure
