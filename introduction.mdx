@@ -40,9 +40,9 @@ Restart your agent. Done. (Prefer manual config? See [Installation](/installatio
   Works with **any MCP-compatible client** — Claude Desktop, Claude Code, Cursor, Windsurf, Cline, and more. The re-injection guard is a Claude Code hook; other clients get the memory and the drift map.
 </Tip>
 
-## Six tools
+## Seven tools
 
-Two pillars, one surface. Memory and drift each get the minimum; nothing else is exposed.
+Two pillars, one surface. Memory and drift each get three tools; the seventh, `share_draft`, is used only when you ask for it.
 
 | Tool | What it does |
 |---|---|
@@ -52,6 +52,7 @@ Two pillars, one surface. Memory and drift each get the minimum; nothing else is
 | [`drift_status`](/tools/drift-status) | "What's drifting right now?" — the truth map with evidence. `anchor_id` → one decision in depth. |
 | [`declare_anchor`](/tools/declare-anchor) | Record a normative claim the detector will check: `decision` / `prohibition` / `constraint` — or `proposal`, an option the user never addressed. |
 | [`resolve_drift`](/tools/resolve-drift) | Close the loop: `fix` · `supersede` · `acknowledge` · `dismiss` · `harden` / `soften`. With `candidate_id`: `surface` or `dismiss` a proposal. |
+| [`share_draft`](/tools/share-draft) | **Only when you ask to share a fix.** Checks fixed fields and returns a link to a draft page you review and send yourself. Linksee sends nothing. |
 
 Earlier versions exposed eleven. The five folded names — `where_am_i`, `check_decision`, `flag_proposals`, `dream`, `resolve_proposal` — are hidden from `tools/list` but **still answer when called**. See [Legacy names](/tools/legacy).
 
