@@ -71,6 +71,16 @@ Import session transcripts or external data into the memory store.
 npx -y linksee-memory import <file>
 ```
 
+## linksee-memory share-draft
+
+Print a link to a reviewed draft of a fix, with the same checks as the [`share_draft`](/tools/share-draft) tool. Sends nothing.
+
+```bash
+npx -y linksee-memory share-draft --service <id> --task <text> --symptom <text> \
+  --tried <text> --result <text> --kind <execution|documentation|hypothesis> \
+  [--conditions <text>] [--runtime <claude|codex|gpt|gemini|other>] [--json]
+```
+
 ## linksee-memory sync
 
 Sync a session's data. Useful for manual synchronization after disconnects.

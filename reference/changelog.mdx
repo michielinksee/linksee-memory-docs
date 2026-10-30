@@ -4,6 +4,15 @@ description: Version history and release notes
 icon: clock-rotate-left
 ---
 
+## v0.17.0
+
+**Share a fix as a link** — 2026-10-30
+
+- New tool [`share_draft`](/tools/share-draft) and `npx -y linksee-memory share-draft`. Used only when the user wants to share how a SaaS / MCP / API connection got stuck and what fixed it. It checks fixed fields and returns a link to KanseiLINK's draft page. Linksee sends nothing; the user reviews the draft and sends it from that page.
+- A field that looks like a key, token, JWT, `Bearer` value, e-mail, tenant URL, IP, local path or long hex / base64 run stops the link and names the field. The URL is capped at 2,000 characters; Linksee asks you to shorten rather than cut. `kind` is required.
+- Linksee records only that a draft was made, with no field text. The six memory and drift tools are unchanged; `tools/list` now shows seven.
+- Security: `@modelcontextprotocol/sdk` raised to `^1.32.2`; `pnpm audit` goes from 46 findings to 0.
+
 ## v0.16.1
 
 **The triage actually runs** — 2026-09-07

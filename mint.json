@@ -79,6 +79,7 @@
         "tools/drift-status",
         "tools/declare-anchor",
         "tools/resolve-drift",
+        "tools/share-draft",
         "tools/legacy"
       ]
     },
